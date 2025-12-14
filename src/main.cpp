@@ -11,6 +11,9 @@ int main(int argc, char *argv[]) {
   lexer.print();
   const auto tokens = lexer.tokenize();
   read_tokens(tokens);
+  Ast ast(tokens);
+  const auto ast_tokens = ast.parse();
+  read_ast_tokens(ast_tokens);
   return EXIT_SUCCESS;
 }
 

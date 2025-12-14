@@ -24,7 +24,7 @@ std::string get_file(const std::string &filename) {
 }
 
 void read_file(const std::string &file_contents) {
-  for (int i = 0;i<file_contents.length();i++) {
+  for (int i = 0;i<static_cast<int>(file_contents.length());i++) {
     std::cout << file_contents[i] << "\n";
   }
 }
