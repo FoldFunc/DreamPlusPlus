@@ -1,5 +1,7 @@
+#include <cctype>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 #include "lexer.hpp"
 #include "helpers.hpp"
@@ -18,7 +20,9 @@ std::vector<Token> Lexer::tokenize() {
     auto is_ident_char = [](unsigned char c) {
         return std::isalnum(c) || c == '_';
     };
-
+    auto is_number_char = [](unsigned char c) {
+      return std::isdigit(c);
+    };
     while (i < file_contents.size()) {
         unsigned char c = file_contents[i];
         if (std::isspace(c)) {
@@ -32,7 +36,26 @@ std::vector<Token> Lexer::tokenize() {
                 identifier.push_back(file_contents[i]);
                 ++i;
             }
-            result.push_back(Identifier{identifier});
+            std::unordered_map<std::string, Keywords> keyword_map = {
+              {"function", Function},
+              {"define", Define},
+            };
+            auto it = keyword_map.find(identifier);
+            if (it != keyword_map.end()) {
+              result.push_back(Keyword(it->second));
+            } else {
+              result.push_back(Identifier{identifier});
+            }
+            continue;
+        }
+        else if (is_number_char(c)) {
+          std::string number;
+            while (i <file_contents.size() &&
+                is_number_char(static_cast<unsigned char>(file_contents[i]))) {
+              number.push_back(file_contents[i]);
+              ++i;
+            }
+            result.push_back(Number{number});
             continue;
         }
         switch (c) {
@@ -41,6 +64,18 @@ std::vector<Token> Lexer::tokenize() {
                 break;
             case '}':
                 result.push_back(RBracket{});
+                break;
+            case '(':
+                result.push_back(LParent{});
+                break;
+            case ')':
+                result.push_back(RParent{});
+                break;
+            case '=':
+                result.push_back(Eq{});
+                break;
+            case ';':
+                result.push_back(SColon{});
                 break;
             default:
                 case_error("Invalid char");

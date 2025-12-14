@@ -6,6 +6,7 @@
 #include <variant>
 #include <vector>
 #include "helpers.hpp"
+#include "lexer.hpp"
 [[noreturn]] void case_error(const std::string &msg) {
   std::cerr << "Error: " << msg << "\n";
   throw std::runtime_error(msg);
@@ -39,6 +40,25 @@ void read_tokens(const std::vector<Token> &tokens) {
       }
       else if constexpr (std::is_same_v<T, RBracket>) {
         std::cout << "<RightBracket>\n";
+      }
+      else if constexpr (std::is_same_v<T, RParent>) {
+        std::cout << "<RightParentesis>\n";
+      }
+      else if constexpr (std::is_same_v<T, LParent>) {
+        std::cout << "<LeftParentesis>\n";
+      }
+      else if constexpr (std::is_same_v<T, Eq>) {
+        std::cout << "<Eaqule>\n";
+      }
+      else if constexpr (std::is_same_v<T, SColon>) {
+        std::cout << "<SemiColon>\n";
+      }
+      else if constexpr (std::is_same_v<T, Keyword>){
+        if (t.keyword == 0) {
+          std::cout << "<Keyword: Function>" << "\n";
+        } else if (t.keyword == 1) {
+          std::cout << "<Keyword: Define>" << "\n";
+        }
       }
     }, token);
   }
