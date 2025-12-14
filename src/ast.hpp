@@ -6,12 +6,15 @@
 #include <memory>
 
 struct Scope;
-struct Return;
+struct Ret;
 struct IntLit;
-
+struct Func;
+struct Def;
 using Stmt = std::variant<
+  std::unique_ptr<Def>,
+  std::unique_ptr<Func>,
   std::unique_ptr<Scope>,
-  std::unique_ptr<Return>
+  std::unique_ptr<Ret>
 >;
 
 using Expr = std::variant<IntLit>;
@@ -19,12 +22,19 @@ using Expr = std::variant<IntLit>;
 struct IntLit {
   int value;
 };
-
+struct Func {
+  std::string name;
+  std::vector<Stmt> body;
+};
+struct Def {
+  std::string name;
+  Expr value;
+};
 struct Scope {
   std::vector<Stmt> body;
 };
 
-struct Return {
+struct Ret {
   Expr value;
 };
 
@@ -33,7 +43,14 @@ public:
   Ast();
   Ast(const std::vector<Token> &tokens_vec);
   std::vector<Stmt> parse();
+  std::vector<Stmt> parse_scope();
+  Stmt parse_return();
+  Stmt parse_define();
+  Stmt parse_function();
+  Expr parse_expr();
 private:
   std::vector<Token> tokens;
+  int i = 0;
+  int scope_count = 0;
 };
 

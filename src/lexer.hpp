@@ -5,12 +5,13 @@
 enum Keywords {
   Function,
   Define,
+  Return, // Need to add it in .cpp
 };
 struct Identifier {
   std::string name;
 };
 struct Number {
-  std::string value;
+  int value;
 };
 struct Keyword {
   Keywords keyword;
