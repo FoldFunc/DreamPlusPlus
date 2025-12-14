@@ -1,8 +1,9 @@
 #include <fstream>
 #include <iostream>
-#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <variant>
 #include <vector>
 #include "helpers.hpp"
 [[noreturn]] void case_error(const std::string &msg) {
@@ -10,31 +11,36 @@
   throw std::runtime_error(msg);
 }
 
-std::vector<std::vector<std::string>> get_file(const std::string &filename) {
-  std::vector<std::vector<std::string>> return_vector;
-  std::ifstream file(filename);
+std::string get_file(const std::string &filename) {
+  std::ifstream file(filename, std::ios::binary);
   if (!file) {
-    case_error("Invalid file name: " + filename);
+    case_error("Incorrect file name.");
   }
-
-  std::string line;
-  while (std::getline(file, line)) {
-    std::vector<std::string> line_contents;
-    std::istringstream iss(line);
-    std::string word;
-    while (iss >> word) {
-      line_contents.push_back(word);
-    }
-    return_vector.push_back(line_contents);
-  }
-
-  return return_vector;
+  return std::string(
+      std::istreambuf_iterator<char>(file),
+      std::istreambuf_iterator<char>()
+      );
 }
 
-void read_file(const std::vector<std::vector<std::string>> &file_contents) {
-  for (const auto &line : file_contents) {
-    for (const auto &word : line) {
-      std::cout << word << "\n";
-    }
+void read_file(const std::string &file_contents) {
+  for (int i = 0;i<file_contents.length();i++) {
+    std::cout << file_contents[i] << "\n";
   }
 }
+void read_tokens(const std::vector<Token> &tokens) {
+  for (const auto &token : tokens) {
+    std::visit([](auto &&t) {
+      using T = std::decay_t<decltype(t)>;
+      if constexpr (std::is_same_v<T, Identifier>) {
+        std::cout << "<Identifier: " << t.name << ">\n";
+      }
+      else if constexpr (std::is_same_v<T, LBracket>) {
+        std::cout << "<LeftBracket>\n";
+      }
+      else if constexpr (std::is_same_v<T, RBracket>) {
+        std::cout << "<RightBracket>\n";
+      }
+    }, token);
+  }
+}
+
