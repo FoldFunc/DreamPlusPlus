@@ -22,16 +22,26 @@ Ast::Ast()
   : tokens(), i(), scope_count() {}
 Ast::Ast(const std::vector<Token> &token_vec)
   : tokens(token_vec), i(), scope_count() {}
+template <typename T>
+bool Ast::consume() {
+  auto current_token = tokens[i];
+  if (std::holds_alternative<T>(current_token)) {
+    if (std::get_if<T>(&current_token)) {
+      i++;
+      return true;
+    }
+  }
+  return false;
+}
 Expr Ast::parse_expr() {
     Token current_token = tokens[i];
 
     if (auto* num = std::get_if<Number>(&current_token)) {
-        auto lit = std::make_unique<IntLit>();
-        lit->value = num->value;
-        ++i;
-        return Expr{ std::move(lit) };
+        auto lit = IntLit();
+        lit.value = num->value;
+        consume<Number>();
+        return Expr{ lit };
     }
-
     case_error("Expected expression");
 }
 Stmt Ast::parse_return() {
@@ -40,12 +50,12 @@ Stmt Ast::parse_return() {
   if (std::holds_alternative<Identifier>(current_token)) {
     if (auto *kw = std::get_if<Identifier>(&current_token)) {
       int value = strint(kw->name);
-      return_val->value = value;
+      IntLit val = IntLit(value);
+      return_val->value = val;
     }
   }
+  consume<SColon>();
   Stmt stmt = std::move(return_val);
-  i++;
-  i++; // Consumes identifier and a semicolon
   return stmt;
 }
 Stmt Ast::parse_define() {
@@ -55,16 +65,15 @@ Stmt Ast::parse_define() {
     if (auto *kw = std::get_if<Identifier>(&current_token)) {
       std::string name = kw->name;
       define_val->name = name;
-      i++;
     }
   } else {
     case_error("Invalid in define.");
   }
+  consume<Eq>();
   auto expr = parse_expr();
   define_val->value = expr;
   Stmt stmt = std::move(define_val);
-  i++;
-  i++;
+  consume<SColon>();
   return stmt;
 
 }
@@ -78,17 +87,17 @@ std::vector<Stmt> Ast::parse_scope() {
       if (auto *kw = std::get_if<Keyword>(&current_token)) {
         Keywords keyword = kw->keyword;
         if (keyword == Keywords::Function) {
-          i++;
+          consume<Keyword>();
           Stmt function = parse_function();
-          scope.push_back(function); // Basar
+          scope.push_back(std::move(function)); // Basar
         } else if (keyword == Define) {
-          i++;
+          consume<Keyword>();
           Stmt define = parse_define();
-          scope.push_back(define);
+          scope.push_back(std::move(define));
         } else if (keyword == Return) {
-          i++;
+          consume<Keyword>();
           Stmt return_val = parse_return();
-          scope.push_back(return_val);
+          scope.push_back(std::move(return_val));
         }
       }
     }
@@ -96,6 +105,7 @@ std::vector<Stmt> Ast::parse_scope() {
       case_error("Not an someting idk.");
     }
   }
+  consume<LBracket>();
   scope_count--;
   return scope;
 }
@@ -107,18 +117,21 @@ Stmt Ast::parse_function() {
     if (auto *kw = std::get_if<Identifier>(&name_parse)) {
       std::string name = kw->name; // Can and will blow you here
       function->name = name;
-      i++;
     } else {
       case_error("Invalid after a function declaretion.");
     }
   } else {
     case_error("Invalid after a function declaration.");
   }
-  i += 3; // Skip () to the first token of a scope for now;
-  auto body = parse_scope();
-  function->body = body;
+  consume<Identifier>();
+  consume<RParent>();
+  consume<LParent>();
+  consume<RBracket>();
+  std::vector<Stmt> body = parse_scope();
+  function->body = std::move(body);
   Stmt stmt = std::move(function);
   scope_count--;
+  consume<LBracket>();
   return stmt;
 }
 std::vector<Stmt> Ast::parse() {
@@ -128,7 +141,7 @@ std::vector<Stmt> Ast::parse() {
     if (std::holds_alternative<Keyword>(current_token)) {
       if (auto *kw = std::get_if<Keyword>(&current_token)) {
         if (kw->keyword == Keywords::Function) {
-          i++;
+          consume<Keyword>();
           result.push_back(parse_function());
         }
       }

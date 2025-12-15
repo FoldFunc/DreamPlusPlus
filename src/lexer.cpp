@@ -1,4 +1,5 @@
 #include <cctype>
+#include <charconv>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -55,8 +56,14 @@ std::vector<Token> Lexer::tokenize() {
               number.push_back(file_contents[i]);
               ++i;
             }
-            result.push_back(Number{number});
-            continue;
+            int val;
+            auto [ptr, ec] = std::from_chars(number.data(), number.data() + number.size(), val);
+            if (ec != std::errc{}) {
+              result.push_back(Number{val});
+              continue;
+            } else {
+              case_error("Invalid number");
+            }
         }
         switch (c) {
             case '{':

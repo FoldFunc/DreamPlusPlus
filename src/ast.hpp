@@ -48,6 +48,8 @@ public:
   Stmt parse_define();
   Stmt parse_function();
   Expr parse_expr();
+  template <typename T>
+  bool consume();
 private:
   std::vector<Token> tokens;
   int i = 0;

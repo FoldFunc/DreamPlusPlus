@@ -1,6 +1,7 @@
 #include <string>
 #include "helpers.hpp"
 #include "lexer.hpp"
+#include "ast.hpp"
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     case_error("Incorrect usage.\nCorrect usage: ./compiler <filename_to_compile>");

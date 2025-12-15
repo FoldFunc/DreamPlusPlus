@@ -6,6 +6,7 @@
 #include <variant>
 #include <vector>
 #include "helpers.hpp"
+#include "ast.hpp"
 #include "lexer.hpp"
 [[noreturn]] void case_error(const std::string &msg) {
   std::cerr << "Error: " << msg << "\n";
@@ -27,6 +28,54 @@ void read_file(const std::string &file_contents) {
   for (int i = 0;i<static_cast<int>(file_contents.length());i++) {
     std::cout << file_contents[i] << "\n";
   }
+}
+void read_ast_tokens(const std::vector<Stmt> &ast_tokens) {
+  for (const auto &stmt : ast_tokens) {
+    print_stmt(stmt, 0);
+  }
+}
+void ident(int n) {
+  std::string spaces = "";
+  for (int i = 0;i<n;i++) {
+    spaces.push_back(' ');
+  }
+  std::cout << spaces;
+}
+void print_expr(const Expr &expr, int ident_level) {
+  std::visit([](auto &&node) {
+    using T = std::decay_t<decltype(node)>;
+    if constexpr (std::is_same_v<T, IntLit>) {
+      std::cout << node.value; 
+    }
+  }, expr);
+}
+void print_stmt(const Stmt &stmt, int ident_level) {
+  std::visit([&]( auto &&node_ptr) {
+    using T = std::decay_t<decltype(node_ptr)>;
+    if constexpr (std::is_same_v<T, std::unique_ptr<Func>>) {
+      ident(ident_level);
+      std::cout << "Func: " << node_ptr->name << "\n";
+      for (const auto &s : node_ptr->body) {
+        print_stmt(s, ident_level+1);
+      }
+    }else if constexpr (std::is_same_v<T, std::unique_ptr<Def>>) {
+      ident(ident_level);
+      std::cout << "Def: " << node_ptr->name << " = ";
+      print_expr(node_ptr->value, 0);
+      std::cout << "\n";
+    } else if constexpr (std::is_same_v<T, std::unique_ptr<Scope>>) {
+      ident(ident_level);
+      std::cout << "Scope" << "\n";
+      for (const Stmt &s : node_ptr->body) {
+        print_stmt(s, ident_level + 1);
+      }
+    } else if constexpr (std::is_same_v<T, std::unique_ptr<Ret>>) {
+      ident(ident_level);
+      std::cout << "Return: ";
+      print_expr(node_ptr->value, 0);
+      std::cout << "\n";
+    }
+  }, stmt);
 }
 void read_tokens(const std::vector<Token> &tokens) {
   for (const auto &token : tokens) {
