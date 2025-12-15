@@ -1,7 +1,3 @@
-/*
- * Note to self:
- * Create a consume function that will consume used tokens.
- */
 #include "ast.hpp"
 #include "helpers.hpp"
 #include "lexer.hpp"
@@ -24,18 +20,19 @@ Ast::Ast(const std::vector<Token> &token_vec)
   : tokens(token_vec), i(), scope_count() {}
 template <typename T>
 bool Ast::consume() {
-  auto current_token = tokens[i];
-  if (std::holds_alternative<T>(current_token)) {
-    if (std::get_if<T>(&current_token)) {
-      i++;
-      return true;
-    }
+  if (i >= static_cast<int>(tokens.size())) {
+    case_error("Unexpected end of input");
   }
+  const Token &token = tokens[i];
+  if (std::holds_alternative<T>(token)) {
+    i++;
+    return true;
+  }
+  case_error("Expected: " + token_type_name<T>() + ", got: " + token_to_string(token));
   return false;
 }
 Expr Ast::parse_expr() {
     Token current_token = tokens[i];
-
     if (auto* num = std::get_if<Number>(&current_token)) {
         auto lit = IntLit();
         lit.value = num->value;
@@ -47,13 +44,8 @@ Expr Ast::parse_expr() {
 Stmt Ast::parse_return() {
   auto return_val = std::make_unique<Ret>();
   auto current_token = tokens[i];
-  if (std::holds_alternative<Identifier>(current_token)) {
-    if (auto *kw = std::get_if<Identifier>(&current_token)) {
-      int value = strint(kw->name);
-      IntLit val = IntLit(value);
-      return_val->value = val;
-    }
-  }
+  auto val = parse_expr();
+  return_val->value = val;
   consume<SColon>();
   Stmt stmt = std::move(return_val);
   return stmt;
@@ -65,6 +57,7 @@ Stmt Ast::parse_define() {
     if (auto *kw = std::get_if<Identifier>(&current_token)) {
       std::string name = kw->name;
       define_val->name = name;
+      consume<Identifier>();
     }
   } else {
     case_error("Invalid in define.");
@@ -78,10 +71,9 @@ Stmt Ast::parse_define() {
 
 }
 std::vector<Stmt> Ast::parse_scope() {
-  scope_count++;
   std::vector<Stmt> scope;
   auto current_token = tokens[i];
-  while (!std::holds_alternative<LBracket>(current_token) && scope_count == 0) {
+  while (!std::holds_alternative<RBracket>(current_token)) {
     current_token = tokens[i];
     if (std::holds_alternative<Keyword>(current_token)) {
       if (auto *kw = std::get_if<Keyword>(&current_token)) {
@@ -89,7 +81,7 @@ std::vector<Stmt> Ast::parse_scope() {
         if (keyword == Keywords::Function) {
           consume<Keyword>();
           Stmt function = parse_function();
-          scope.push_back(std::move(function)); // Basar
+          scope.push_back(std::move(function));
         } else if (keyword == Define) {
           consume<Keyword>();
           Stmt define = parse_define();
@@ -101,16 +93,17 @@ std::vector<Stmt> Ast::parse_scope() {
         }
       }
     }
+    else if (std::holds_alternative<RBracket>(current_token)) {
+      break;
+    }
     else {
       case_error("Not an someting idk.");
     }
   }
-  consume<LBracket>();
-  scope_count--;
+  consume<RBracket>();
   return scope;
 }
 Stmt Ast::parse_function() {
-  scope_count++;
   auto function = std::make_unique<Func>();
   auto name_parse = tokens[i];
   if (std::holds_alternative<Identifier>(name_parse)) {
@@ -124,14 +117,12 @@ Stmt Ast::parse_function() {
     case_error("Invalid after a function declaration.");
   }
   consume<Identifier>();
-  consume<RParent>();
   consume<LParent>();
-  consume<RBracket>();
+  consume<RParent>();
+  consume<LBracket>();
   std::vector<Stmt> body = parse_scope();
   function->body = std::move(body);
   Stmt stmt = std::move(function);
-  scope_count--;
-  consume<LBracket>();
   return stmt;
 }
 std::vector<Stmt> Ast::parse() {
@@ -143,8 +134,18 @@ std::vector<Stmt> Ast::parse() {
         if (kw->keyword == Keywords::Function) {
           consume<Keyword>();
           result.push_back(parse_function());
+        } else if (kw->keyword == Keywords::Define) {
+          consume<Keyword>();
+          result.push_back(parse_define());
+        } else if (kw->keyword == Keywords::Return) {
+          consume<Keyword>();
+          result.push_back(parse_return());
+        } else {
+          case_error("Not supported for now");
         }
       }
+    } else {
+      case_error("Invalid in parse");
     }
   }
   return result;

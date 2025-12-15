@@ -6,7 +6,8 @@
 #include <vector>
 #include "lexer.hpp"
 #include "helpers.hpp"
-
+// Lparent = (
+// RParent = )
 Lexer::Lexer()
   : file_contents() {}
 Lexer::Lexer(const std::string &file) 
@@ -19,7 +20,7 @@ std::vector<Token> Lexer::tokenize() {
     std::size_t i = 0;
 
     auto is_ident_char = [](unsigned char c) {
-        return std::isalnum(c) || c == '_';
+        return std::isalpha(c) || c == '_'; // For now variable names can't and won't be numbers
     };
     auto is_number_char = [](unsigned char c) {
       return std::isdigit(c);
@@ -40,6 +41,7 @@ std::vector<Token> Lexer::tokenize() {
             std::unordered_map<std::string, Keywords> keyword_map = {
               {"function", Function},
               {"define", Define},
+              {"return", Return},
             };
             auto it = keyword_map.find(identifier);
             if (it != keyword_map.end()) {
@@ -58,7 +60,7 @@ std::vector<Token> Lexer::tokenize() {
             }
             int val;
             auto [ptr, ec] = std::from_chars(number.data(), number.data() + number.size(), val);
-            if (ec != std::errc{}) {
+            if (ec == std::errc{}) {
               result.push_back(Number{val});
               continue;
             } else {
