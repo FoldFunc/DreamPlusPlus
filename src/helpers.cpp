@@ -25,38 +25,38 @@ std::string get_file(const std::string &filename) {
 }
 
 std::string keyword_to_string(Keywords k) {
-    switch (k) {
-        case Keywords::Function: return "function";
-        case Keywords::Define:   return "define";
-        case Keywords::Return:   return "return";
-        default:                 return "<unknown keyword>";
-    }
+  switch (k) {
+    case Keywords::Function: return "function";
+    case Keywords::Define:   return "define";
+    case Keywords::Return:   return "return";
+    default:                 return "<unknown keyword>";
+  }
 }
 std::string token_to_string(const Token &tok) {
   return std::visit([](auto &&t) -> std::string {
       using T = std::decay_t<decltype(t)>;
       if constexpr (std::is_same_v<T, Identifier>) {
-        return "Identifier(" + t.name + ")";
+      return "Identifier(" + t.name + ")";
       }
       else if constexpr (std::is_same_v<T, Number>) {
-        return "Number(" + std::to_string(t.value) + ")";
+      return "Number(" + std::to_string(t.value) + ")";
       }
       else if constexpr (std::is_same_v<T, Keyword>) {
-        return "Keyword(" + keyword_to_string(t.keyword) + ")";
+      return "Keyword(" + keyword_to_string(t.keyword) + ")";
       }
       else if constexpr (std::is_same_v<T, SColon>) {
-        return ";";
+      return ";";
       }
       else if constexpr (std::is_same_v<T, LBracket>) {
-        return "{";
+      return "{";
       }
       else if constexpr (std::is_same_v<T, RBracket>) {
-        return "}";
+      return "}";
       }
       else {
         return "<unknown token>"; 
       }
-      }, tok);
+  }, tok);
 }
 
 template <typename T>
@@ -110,35 +110,37 @@ void print_expr(const Expr &expr, int ident_level) {
   std::visit([](auto &&node) {
       using T = std::decay_t<decltype(node)>;
       if constexpr (std::is_same_v<T, IntLit>) {
-      std::cout << node.value; 
+        std::cout << node.value; 
+      } else if constexpr (std::is_same_v<T, VarMut>) {
+        std::cout << node.name;
       }
-      }, expr);
+  }, expr);
 }
 void print_stmt(const Stmt &stmt, int ident_level) {
   std::visit([&]( auto &&node_ptr) {
       using T = std::decay_t<decltype(node_ptr)>;
       if constexpr (std::is_same_v<T, std::unique_ptr<Func>>) {
-      ident(ident_level);
-      std::cout << "Func: " << node_ptr->name << "\n";
-      for (const auto &s : node_ptr->body) {
-      print_stmt(s, ident_level+1);
-      }
+          ident(ident_level);
+          std::cout << "Func: " << node_ptr->name << "\n";
+        for (const auto &s : node_ptr->body) {
+          print_stmt(s, ident_level+1);
+        }
       }else if constexpr (std::is_same_v<T, std::unique_ptr<Def>>) {
-      ident(ident_level);
-      std::cout << "Def: " << node_ptr->name << " = ";
-      print_expr(node_ptr->value, 0);
-      std::cout << "\n";
+        ident(ident_level);
+        std::cout << "Def: " << node_ptr->name << " = ";
+        print_expr(node_ptr->value, 0);
+        std::cout << "\n";
       } else if constexpr (std::is_same_v<T, std::unique_ptr<Scope>>) {
-      ident(ident_level);
-      std::cout << "Scope" << "\n";
-      for (const Stmt &s : node_ptr->body) {
-      print_stmt(s, ident_level + 1);
+        ident(ident_level);
+        std::cout << "Scope" << "\n";
+        for (const Stmt &s : node_ptr->body) {
+        print_stmt(s, ident_level + 1);
       }
       } else if constexpr (std::is_same_v<T, std::unique_ptr<Ret>>) {
-      ident(ident_level);
-      std::cout << "Return: ";
-      print_expr(node_ptr->value, 0);
-      std::cout << "\n";
+        ident(ident_level);
+        std::cout << "Return: ";
+        print_expr(node_ptr->value, 0);
+        std::cout << "\n";
       }
   }, stmt);
 }

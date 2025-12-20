@@ -8,6 +8,7 @@
 struct Scope;
 struct Ret;
 struct IntLit;
+struct VarMut;
 struct Func;
 struct Def;
 using Stmt = std::variant<
@@ -17,8 +18,10 @@ using Stmt = std::variant<
   std::unique_ptr<Ret>
 >;
 
-using Expr = std::variant<IntLit>;
-
+using Expr = std::variant<IntLit, VarMut>;
+struct VarMut {
+  std::string name;
+};
 struct IntLit {
   int value;
 };
