@@ -1,0 +1,25 @@
+     1                                 %line 1+1 loop.asm
+     2                                 [section .data]
+     3                                 
+     4 00000000 00                      EXIT_CODE db 0
+     5 00000001 3C                      SYSCALL_CODE db 60
+     6 00000002 00                      iterator db 0
+     7                                 
+     8                                 [section .text]
+     9                                 
+    10                                 [global _start]
+    11                                 
+    12                                 _start:
+    13 00000000 8A0425[00000000]        mov al, byte [iterator]
+    14                                 condition:
+    15 00000007 3C0A                    cmp al, 10
+    16 00000009 7C00                    jl loopbody
+    17 0000000B EB02                    jmp end
+    18                                 loopbody:
+    19 0000000D FEC0                    inc al
+    20 0000000F EBF4                    jmp condition
+    21                                 end:
+    22 00000011 880425[00000000]        mov byte [EXIT_CODE], al
+    23 00000018 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    24 00000021 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    25 0000002A 0F05                    syscall
