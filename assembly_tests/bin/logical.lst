@@ -1,0 +1,59 @@
+     1                                 %line 1+1 logical.asm
+     2                                 [section .data]
+     3                                 
+     4 00000000 3C                      SYSCALL_CODE db 60
+     5 00000001 00                      EXIT_CODE db 0
+     6                                 
+     7 00000002 4F                      var1 db 0x4f
+     8 00000003 20                      var2 db 0x20
+     9                                 
+    10                                 [section .text]
+    11                                 
+    12                                 [global _start]
+    13                                 
+    14                                 _start:
+    15 00000000 8A0425[00000000]        mov al, byte [var1]
+    16                                 
+    17 00000007 220425[00000000]        and al, byte [var2]
+    18 0000000E 30C0                    xor al, al
+    19                                 
+    20 00000010 8A0425[00000000]        mov al, byte [var1]
+    21 00000017 0A0425[00000000]        or al, byte [var2]
+    22 0000001E 30C0                    xor al, al
+    23                                 
+    24 00000020 8A0425[00000000]        mov al, byte [var1]
+    25 00000027 320425[00000000]        xor al, byte [var2]
+    26 0000002E 30C0                    xor al, al
+    27                                 
+    28 00000030 8A0425[00000000]        mov al, byte [var1]
+    29 00000037 F6D0                    not al
+    30 00000039 30C0                    xor al, al
+    31                                 
+    32 0000003B 8A0425[00000000]        mov al, byte [var1]
+    33 00000042 D0E0                    shl al, 1
+    34 00000044 30C0                    xor al, al
+    35                                 
+    36 00000046 8A0425[00000000]        mov al, byte [var1]
+    37 0000004D D0E8                    shr al, 1
+    38 0000004F 30C0                    xor al, al
+    39                                 
+    40 00000051 8A0425[00000000]        mov al, byte [var1]
+    41 00000058 D0E0                    sal al, 1
+    42 0000005A 30C0                    xor al, al
+    43                                 
+    44 0000005C 8A0425[00000000]        mov al, byte [var1]
+    45 00000063 D0F8                    sar al, 1
+    46 00000065 30C0                    xor al, al
+    47                                 
+    48 00000067 8A0425[00000000]        mov al, byte [var1]
+    49 0000006E D0C0                    rol al, 1
+    50 00000070 30C0                    xor al, al
+    51                                 
+    52 00000072 8A0425[00000000]        mov al, byte [var1]
+    53 00000079 D0C8                    ror al, 1
+    54 0000007B 30C0                    xor al, al
+    55                                 
+    56                                 end:
+    57 0000007D 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    58 00000086 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    59 0000008F 0F05                    syscall

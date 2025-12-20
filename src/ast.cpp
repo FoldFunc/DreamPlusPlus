@@ -2,6 +2,7 @@
 #include "helpers.hpp"
 #include "lexer.hpp"
 #include <charconv>
+#include <iostream>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -14,7 +15,7 @@ int strint(std::string value) {
     case_error("Invalid in return expression.");
   }
 }
-Ast::Ast() 
+Ast::Ast()
   : tokens(), i(), scope_count() {}
 Ast::Ast(const std::vector<Token> &token_vec)
   : tokens(token_vec), i(), scope_count() {}
@@ -38,6 +39,12 @@ Expr Ast::parse_expr() {
         lit.value = num->value;
         consume<Number>();
         return Expr{ lit };
+    }
+    else if (auto *variable = std::get_if<Identifier>(&current_token)) {
+      auto var = VarMut();
+      var.name = variable->name;
+      consume<Identifier>();
+      return Expr { var };
     }
     case_error("Expected expression");
 }

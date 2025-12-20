@@ -1,7 +1,7 @@
 section .data
 
   EXIT_CODE db 0
-  SYSCALL db 60
+  SYSCALL_EXIT db 60
 
   var1 db 10
   var2 db 30
@@ -39,7 +39,6 @@ addition:
 increment:
   mov al, byte [var1]
   inc al
-  jmp zero
   mov byte [incsum], al
   xor al, al
 
@@ -73,23 +72,19 @@ mulitply:
   mov al, byte [var1]
   mul byte[var2]
   mov word [mulsum], ax
-  mov word [mulsum+2], dx
   xor al, al
   xor ax, ax
-  xor dx, dx
 
 signedmul1:
-  mov al, byte [var1]
-  imul al, -13
+  movzx ax, byte [var1]
+  imul ax, -13
   mov word [mulsignedsum1], ax
-  xor al, al
   xor ax, ax
 
 signedmul2:
-  mov al, byte [var1]
-  imul al, byte [var2]
+  movzx ax, byte [var1]
+  imul ax, word [var2]
   mov word [mulsignedsum2], ax
-  xor al, al
   xor ax, ax
 
 ; There is also a idiv instruction but I am lazy and it's the same as imul.
@@ -105,6 +100,6 @@ divide:
   xor bl, bl
 
 end:
-  mov rax, byte [SYSCALL]
-  mov rdi, byte [EXIT_CODE]
+  movzx rax, byte [SYSCALL_EXIT]
+  movzx rdi, byte [EXIT_CODE]
   syscall

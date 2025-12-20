@@ -1,0 +1,30 @@
+     1                                 %line 1+1 controlinstructions.asm
+     2                                 [section .data]
+     3                                 
+     4 00000000 00                      EXIT_CODE db 0
+     5 00000001 3C                      SYSCALL_CODE db 60
+     6                                 
+     7 00000002 0A                      var1 db 10
+     8 00000003 0A                      var2 db 10
+     9                                 
+    10                                 [section .text]
+    11                                 
+    12                                 [global _start]
+    13                                 
+    14                                 dothis:
+    15 00000000 30C0                    xor al, al
+    16 00000002 8A0425[00000000]        mov al, byte [var1]
+    17 00000009 FEC0                    inc al
+    18 0000000B 880425[00000000]        mov byte [EXIT_CODE], al
+    19 00000012 EB12                    jmp end
+    20                                 _start:
+    21 00000014 8A0425[00000000]        mov al, byte [var1]
+    22 0000001B 8A2425[00000000]        mov ah, byte [var2]
+    23 00000022 38E0                    cmp al, ah
+    24 00000024 74D8                    je dothis
+    25 00000026 EBFE                    jmp end
+    26                                 
+    27                                 end:
+    28 00000028 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    29 00000031 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    30 0000003A 0F05                    syscall

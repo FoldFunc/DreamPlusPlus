@@ -1,0 +1,109 @@
+     1                                 %line 1+1 calculations.asm
+     2                                 [section .data]
+     3                                 
+     4 00000000 00                      EXIT_CODE db 0
+     5 00000001 3C                      SYSCALL_EXIT db 60
+     6                                 
+     7 00000002 0A                      var1 db 10
+     8 00000003 1E                      var2 db 30
+     9                                 
+    10 00000004 00                      addsum db 0
+    11                                 
+    12 00000005 00                      subsum db 0
+    13                                 
+    14 00000006 0000                    mulsum dw 0
+    15                                 
+    16 00000008 00                      divsum db 0
+    17 00000009 00                      divsumrest db 0
+    18                                 
+    19 0000000A 0000                    mulsignedsum2 dw 0
+    20 0000000C 0000                    mulsignedsum1 dw 0
+    21                                 
+    22 0000000E 00                      incsum db 0
+    23 0000000F 00                      decsum db 0
+    24                                 
+    25 00000010 00000000000000A001-     carryvar1 ddq 0x1A000000000000000
+    26 00000010 00000000000000     
+    27 00000020 00000000000000C002-     carryvar2 ddq 0x2C000000000000000
+    28 00000020 00000000000000     
+    29 00000030 000000000000000000-     carrysum ddq 0
+    30 00000030 00000000000000     
+    31                                 
+    32                                 [section .text]
+    33                                 
+    34                                 [global _start]
+    35                                 _start:
+    36                                 
+    37                                 addition:
+    38 00000000 8A0425[00000000]        mov al, byte [var1]
+    39 00000007 020425[00000000]        add al, byte [var2]
+    40 0000000E 880425[00000000]        mov byte [addsum], al
+    41 00000015 30C0                    xor al, al
+    42                                 
+    43                                 increment:
+    44 00000017 8A0425[00000000]        mov al, byte [var1]
+    45 0000001E FEC0                    inc al
+    46 00000020 880425[00000000]        mov byte [incsum], al
+    47 00000027 30C0                    xor al, al
+    48                                 
+    49                                 addcarry:
+    50                                 
+    51 00000029 488B0425[00000000]      mov rax, qword [carryvar1]
+    52 00000031 488B1C25[08000000]      mov rbx, qword [carryvar1 + 8]
+    53                                 
+    54 00000039 48030425[00000000]      add rax, qword [carryvar2]
+    55 00000041 48131C25[08000000]      adc rbx, qword [carryvar2 + 8]
+    56                                 
+    57 00000049 48890425[00000000]      mov qword [carrysum], rax
+    58 00000051 48891C25[08000000]      mov qword [carrysum + 8], rbx
+    59                                 
+    60 00000059 4831C0                  xor rax, rax
+    61 0000005C 4831DB                  xor rbx, rbx
+    62                                 
+    63                                 substract:
+    64 0000005F 8A0425[00000000]        mov al, byte [var2]
+    65 00000066 2A0425[00000000]        sub al, byte [var1]
+    66 0000006D 880425[00000000]        mov byte [subsum], al
+    67                                 
+    68 00000074 30C0                    xor al, al
+    69                                 
+    70                                 decriment:
+    71 00000076 8A0425[00000000]        mov al, byte [var1]
+    72 0000007D FEC8                    dec al
+    73 0000007F 880425[00000000]        mov byte [decsum], al
+    74                                 
+    75                                 mulitply:
+    76 00000086 8A0425[00000000]        mov al, byte [var1]
+    77 0000008D F62425[00000000]        mul byte[var2]
+    78 00000094 66890425[00000000]      mov word [mulsum], ax
+    79 0000009C 30C0                    xor al, al
+    80 0000009E 6631C0                  xor ax, ax
+    81                                 
+    82                                 signedmul1:
+    83 000000A1 660FB60425[00000000]      movzx ax, byte [var1]
+    84 000000AA 666BC0F3                imul ax, -13
+    85 000000AE 66890425[00000000]      mov word [mulsignedsum1], ax
+    86 000000B6 6631C0                  xor ax, ax
+    87                                 
+    88                                 signedmul2:
+    89 000000B9 660FB60425[00000000]      movzx ax, byte [var1]
+    90 000000C2 660FAF0425[00000000]      imul ax, word [var2]
+    91 000000CB 66890425[00000000]      mov word [mulsignedsum2], ax
+    92 000000D3 6631C0                  xor ax, ax
+    93                                 
+    94                                 
+    95                                 divide:
+    96 000000D6 8A0425[00000000]        mov al, byte [var2]
+    97 000000DD B400                    mov ah, 0
+    98 000000DF 8A1C25[00000000]        mov bl, byte [var1]
+    99 000000E6 F6F3                    div bl
+   100 000000E8 880425[00000000]        mov byte [divsum], al
+   101 000000EF 882425[00000000]        mov byte [divsumrest], ah
+   102 000000F6 30C0                    xor al, al
+   103 000000F8 30E4                    xor ah, ah
+   104 000000FA 30DB                    xor bl, bl
+   105                                 
+   106                                 end:
+   107 000000FC 480FB60425[00000000]      movzx rax, byte [SYSCALL_EXIT]
+   108 00000105 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+   109 0000010E 0F05                    syscall
