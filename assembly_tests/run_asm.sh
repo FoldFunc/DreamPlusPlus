@@ -15,14 +15,14 @@ if [ ! -f "$SOURCE" ]; then
 fi
 
 BASENAME="${SOURCE%.asm}"
-OBJECT="$BASENAME.o"
-EXECUTABLE="$BASENAME"
-
+OBJECT="bin/$BASENAME.o"
+EXECUTABLE="bin/$BASENAME"
+LISTFILE="bin/$BASENAME.lst"
 echo "Assembling $SOURCE..."
-yasm -f elf64 "$SOURCE" -o "$OBJECT"
-
+yasm -f elf64 -g dwarf2 "$SOURCE" -o "$OBJECT"
+yasm -f elf64 -g dwarf2 "$SOURCE" -l "$LISTFILE"
 echo "Linking $OBJECT..."
-ld "$OBJECT" -o "$EXECUTABLE"
+ld -g "$OBJECT" -o "$EXECUTABLE"
 
 echo "Build successful!"
 echo "Executable: ./$EXECUTABLE"
