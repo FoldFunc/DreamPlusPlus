@@ -2,15 +2,36 @@
 #include <string>
 #include <variant>
 #include <vector>
+enum Keywords {
+  Function,
+  Define,
+  Return, // Need to add it in .cpp
+};
 struct Identifier {
   std::string name;
 };
+struct Number {
+  int value;
+};
+struct Keyword {
+  Keywords keyword;
+};
 struct LBracket {};
 struct RBracket {};
+struct LParent {};
+struct RParent {};
+struct Eq {};
+struct SColon{};
 using Token = std::variant<
+      Keyword,
       Identifier, 
+      Number,
       LBracket, 
-      RBracket
+      RBracket,
+      LParent,
+      RParent,
+      Eq,
+      SColon
 >;
 class Lexer {
 public:

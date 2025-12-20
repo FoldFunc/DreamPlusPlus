@@ -1,0 +1,39 @@
+     1                                 %line 1+1 type_conv.asm
+     2                                 [section .data]
+     3                                 
+     4 00000000 00                      EXIT_CODE db 0
+     5 00000001 3C                      SYSCALL_CODE db 60
+     6                                 
+     7 00000002 00                      var db 0
+     8                                 
+     9                                 [section .text]
+    10                                 
+    11                                 [global _start]
+    12                                 
+    13                                 _start:
+    14                                 
+    15                                 narrow:
+    16                                 
+    17 00000000 48C7C0F4010000          mov rax, 500
+    18                                 
+    19                                 
+    20                                 wide_unsign:
+    21                                 
+    22                                 
+    23 00000007 B028                    mov al, 40
+    24 00000009 48C7C300000000          mov rbx, 0
+    25 00000010 88C3                    mov bl, al
+    26                                 
+    27                                 
+    28                                 wide_sign:
+    29                                 
+    30 00000012 B1F6                    mov cl, -10
+    31 00000014 480FBEC9                movsx rcx, cl
+    32 00000018 880C25[00000000]        mov byte [EXIT_CODE], cl
+    33                                 
+    34                                 end:
+    35 0000001F 4831C0                  xor rax, rax
+    36 00000022 4831FF                  xor rdi, rdi
+    37 00000025 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    38 0000002E 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    39 00000037 0F05                    syscall

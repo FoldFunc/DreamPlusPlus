@@ -1,0 +1,14 @@
+     1                                 %line 1+1 lea.asm
+     2                                 [section .data]
+     3                                  SYSCALL_CODE equ 60
+     4 00000000 64                      EXIT_CODE db 100
+     5 00000001 64                      var1 db 100
+     6                                 [section .text]
+     7                                 
+     8                                 [global _start]
+     9                                 _start:
+    10 00000000 488D1C25[00000000]      lea rbx, byte [var1]
+    11                                 end:
+    12 00000008 48C7C03C000000          mov rax, SYSCALL_CODE
+    13 0000000F 0FB63C25[00000000]      movzx edi, byte [EXIT_CODE]
+    14 00000017 0F05                    syscall
