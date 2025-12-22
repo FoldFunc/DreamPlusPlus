@@ -1,0 +1,47 @@
+     1                                 %line 1+1 bubble_sort.asm
+     2                                 [section .data]
+     3 00000000 040000000300000002-     arr dd 4, 3, 2, 5
+     4 00000000 00000005000000     
+     5 00000010 04                      arrlen db 4
+     6                                 
+     7                                 [section .text]
+     8                                 [global _start]
+     9                                 
+    10                                 _start:
+    11 00000000 480FB60C25[00000000]      movzx rcx, byte [arrlen]
+    12 00000009 4831DB                  xor rbx, rbx
+    13                                 
+    14                                 outer_loop:
+    15 0000000C 4839CB                  cmp rbx, rcx
+    16 0000000F 7D39                    jge end
+    17                                 
+    18 00000011 4831D2                  xor rdx, rdx
+    19 00000014 4889CE                  mov rsi, rcx
+    20 00000017 4829DE                  sub rsi, rbx
+    21 0000001A 48FFCE                  dec rsi
+    22                                 
+    23                                 inner_loop:
+    24 0000001D 4839F2                  cmp rdx, rsi
+    25 00000020 7D23                    jge skip_inner
+    26                                 
+    27 00000022 8B0495[00000000]        mov eax, [arr + rdx*4]
+    28 00000029 8B3C95[04000000]        mov edi, [arr + (rdx+1)*4]
+    29 00000030 39F8                    cmp eax, edi
+    30 00000032 7E0C                    jle no_swap
+    31                                 
+    32 00000034 893C95[00000000]        mov [arr + rdx*4], edi
+    33 0000003B 890495[04000000]        mov [arr + (rdx+1)*4], eax
+    34                                 
+    35                                 no_swap:
+    36 00000042 48FFC2                  inc rdx
+    37 00000045 EBD4                    jmp inner_loop
+    38                                 
+    39                                 skip_inner:
+    40 00000047 48FFC3                  inc rbx
+    41 0000004A EBBE                    jmp outer_loop
+    42                                 
+    43                                 end:
+    44 0000004C B83C000000              mov eax, 60
+    45 00000051 31FF                    xor edi, edi
+    46 00000053 0F05                    syscall
+    47                                 

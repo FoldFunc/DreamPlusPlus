@@ -1,0 +1,35 @@
+     1                                 %line 1+1 sumlist.asm
+     2                                 [section .data]
+     3 00000000 3C                      SYSCALL_CODE db 60
+     4 00000001 00000000                EXIT_CODE dd 0
+     5                                 
+     6 00000005 030000000200000004-     arr dd 3, 2, 4, 1
+     7 00000005 00000001000000     
+     8 00000015 04                      arrlen db 4
+     9 00000016 00000000                arrsum dd 0
+    10                                 
+    11                                 [section .text]
+    12                                 
+    13                                 [global _start]
+    14                                 
+    15                                 _start:
+    16 00000000 8A0C25[00000000]        mov cl, byte [arrlen]
+    17 00000007 4831D2                  xor rdx, rdx
+    18                                 
+    19                                 loopbody:
+    20 0000000A 4839CA                  cmp rdx, rcx
+    21 0000000D 7D1A                    jge end
+    22 0000000F 8B1C25[00000000]        mov ebx, [arrsum]
+    23 00000016 8B0495[00000000]        mov eax, [arr+(rdx*4)]
+    24 0000001D 01C3                    add ebx, eax
+    25 0000001F 891C25[00000000]        mov [arrsum], ebx
+    26 00000026 48FFC2                  inc rdx
+    27 00000029 EBDD                    jmp loopbody
+    28                                 
+    29                                 end:
+    30 0000002B 8B0425[00000000]        mov eax, [arrsum]
+    31 00000032 890425[00000000]        mov [EXIT_CODE], eax
+    32                                 
+    33 00000039 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    34 00000042 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    35 0000004B 0F05                    syscall
