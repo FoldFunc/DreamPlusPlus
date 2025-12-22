@@ -1,0 +1,31 @@
+     1                                 %line 1+1 arrays.asm
+     2                                 [section .data]
+     3 00000000 010000000200000003-     arr dd 1, 2, 3, 4
+     4 00000000 00000004000000     
+     5 00000010 04                      arrlen db 4
+     6 00000011 3C                      SYSCALL_CODE db 60
+     7 00000012 00                      EXIT_CODE db 0
+     8                                 
+     9                                 [section .text]
+    10                                 [global _start]
+    11                                 
+    12                                 _start:
+    13 00000000 8A0C25[00000000]        mov cl, byte [arrlen]
+    14 00000007 4831DB                  xor rbx, rbx
+    15                                 
+    16                                 loopbody:
+    17 0000000A 4839CB                  cmp rbx, rcx
+    18 0000000D 7D14                    jge endloop
+    19                                 
+    20 0000000F 8B049D[00000000]        mov eax, [arr + rbx*4]
+    21 00000016 0FAFC0                  imul eax, eax
+    22 00000019 89049D[00000000]        mov [arr + rbx*4], eax
+    23                                 
+    24 00000020 48FFC3                  inc rbx
+    25 00000023 EBE3                    jmp loopbody
+    26                                 
+    27                                 endloop:
+    28 00000025 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    29 0000002E 480FB63C25[00000000]      movzx rdi, byte [EXIT_CODE]
+    30 00000037 0F05                    syscall
+    31                                 
