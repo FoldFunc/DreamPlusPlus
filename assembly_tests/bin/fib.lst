@@ -1,0 +1,70 @@
+     1                                 %line 1+1 fib.asm
+     2                                 
+     3                                 [section .data]
+     4 00000000 3C                      SYSCALL_CODE db 60
+     5                                 
+     6 00000001 5E                      fibnum db 94
+     7 00000002 0000000000000000        a dq 0
+     8 0000000A 0100000000000000        b dq 1
+     9                                 
+    10                                 [section .bss]
+    11                                 
+    12 00000000 <gap>                   buffer resb 32
+    13                                 
+    14                                 
+    15                                 [section .text]
+    16                                 
+    17                                 [global _start]
+    18                                 
+    19                                 _start:
+    20 00000000 480FB60425[00000000]      movzx rax, byte [fibnum]
+    21 00000009 4883F800                cmp rax, 0
+    22 0000000D 7464                    je end
+    23 0000000F EBFE                    jmp loopbody
+    24                                 
+    25                                 loopbody:
+    26                                 
+    27 00000011 488B1C25[00000000]      mov rbx, [a]
+    28 00000019 488B0C25[00000000]      mov rcx, [b]
+    29                                 
+    30 00000021 4889CA                  mov rdx, rcx
+    31 00000024 4801D9                  add rcx, rbx
+    32 00000027 4889D3                  mov rbx, rdx
+    33                                 
+    34 0000002A 48891C25[00000000]      mov [a], rbx
+    35 00000032 48890C25[00000000]      mov [b], rcx
+    36                                 
+    37 0000003A 48FFC8                  dec rax
+    38 0000003D 75D0                    jnz loopbody
+    39 0000003F EB32                    jmp end
+    40                                 
+    41                                 itoa:
+    42 00000041 48C7C10A000000          mov rcx, 10
+    43 00000048 488D3425[1F000000]      lea rsi, [buffer + 31]
+    44 00000050 C60600                  mov byte [rsi], 0
+    45 00000053 4831D2                  xor rdx, rdx
+    46                                 
+    47                                 .convert:
+    48 00000056 4831D2                  xor rdx, rdx
+    49 00000059 48F7F1                  div rcx
+    50 0000005C 80C230                  add dl, '0'
+    51 0000005F 48FFCE                  dec rsi
+    52 00000062 8816                    mov [rsi], dl
+    53 00000064 4885C0                  test rax, rax
+    54 00000067 75EB                    jnz .convert
+    55                                 
+    56 00000069 488D1425[1F000000]      lea rdx, [buffer + 31]
+    57 00000071 4829F2                  sub rdx, rsi
+    58 00000074 C3                      ret
+    59                                 
+    60                                 end:
+    61 00000075 488B0425[00000000]      mov rax, [a]
+    62 0000007D E8BAFFFFFF              call itoa
+    63                                 
+    64 00000082 48C7C001000000          mov rax, 1
+    65 00000089 48C7C701000000          mov rdi, 1
+    66 00000090 0F05                    syscall
+    67                                 
+    68 00000092 480FB60425[00000000]      movzx rax, byte [SYSCALL_CODE]
+    69 0000009B 4831FF                  xor rdi, rdi
+    70 0000009E 0F05                    syscall
