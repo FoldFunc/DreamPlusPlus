@@ -55,7 +55,7 @@ void Builder::build_scope(const Stmt &s) {
                 Expr expr = new_stmt_val.value;
                 std::string asm_expr = build_expr(expr);
                 lines.push_back(std::format("{}mov rax, {}", std::string(indent, ' '), asm_expr));
-                lines.push_back(std::format("{}push rax", std::string(indent, ' ')));
+                lines.push_back(std::format("{}mov [rbp-{}], rax", std::string(indent, ' '), stack_pointer*-1));
                 push(name);
               } else if constexpr (std::is_same_v<T2, std::unique_ptr<Scope>>) {
                   build_scope(std::move(stmt)); // AHHHHHHHHHHHHHH

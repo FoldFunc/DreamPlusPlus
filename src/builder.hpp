@@ -15,5 +15,5 @@ private:
   std::vector<Stmt> s;
   int indent = 0;
   std::vector<std::pair<std::string, int>> virtual_stack;
-  int stack_pointer = 0;
+  int stack_pointer = -8;
 };

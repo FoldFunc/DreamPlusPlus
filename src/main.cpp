@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
   for (const std::string line : asm_lines) {
     out_file << line << "\n";
   }
+  out_file.flush();
+  out_file.close();
   std::string asm_file = "compiler_build/out.asm";
   std::string obj_file = "compiler_build/out.o";
   std::string exe_file = "compiler_build/out";
@@ -49,6 +51,11 @@ int main(int argc, char *argv[]) {
   std::string link_cmd = "ld " + obj_file + " -o " + exe_file;
   if (std::system(link_cmd.c_str()) != 0) {
     case_error("Linking failed");
+    return EXIT_FAILURE;
+  }
+  std::string chmod_cmd = "chmod +x " + exe_file;
+  if (std::system(chmod_cmd.c_str()) != 0) {
+    case_error("Chmoding failed");
     return EXIT_FAILURE;
   }
   return EXIT_SUCCESS;
