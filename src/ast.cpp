@@ -2,7 +2,6 @@
 #include "helpers.hpp"
 #include "lexer.hpp"
 #include <charconv>
-#include <iostream>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -77,7 +76,7 @@ Stmt Ast::parse_define() {
   return stmt;
 
 }
-std::vector<Stmt> Ast::parse_scope() {
+Stmt Ast::parse_scope() {
   std::vector<Stmt> scope;
   auto current_token = tokens[i];
   while (!std::holds_alternative<RBracket>(current_token)) {
@@ -108,7 +107,9 @@ std::vector<Stmt> Ast::parse_scope() {
     }
   }
   consume<RBracket>();
-  return scope;
+  return Stmt{
+    std::make_unique<Scope>(Scope{ std::move(scope) })
+  };
 }
 Stmt Ast::parse_function() {
   auto function = std::make_unique<Func>();
@@ -127,7 +128,7 @@ Stmt Ast::parse_function() {
   consume<LParent>();
   consume<RParent>();
   consume<LBracket>();
-  std::vector<Stmt> body = parse_scope();
+  Stmt body = parse_scope();
   function->body = std::move(body);
   Stmt stmt = std::move(function);
   return stmt;
