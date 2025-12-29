@@ -27,7 +27,7 @@ struct IntLit {
 };
 struct Func {
   std::string name;
-  std::vector<Stmt> body;
+  Stmt body;
 };
 struct Def {
   std::string name;
@@ -46,7 +46,7 @@ public:
   Ast();
   Ast(const std::vector<Token> &tokens_vec);
   std::vector<Stmt> parse();
-  std::vector<Stmt> parse_scope();
+  Stmt parse_scope();
   Stmt parse_return();
   Stmt parse_define();
   Stmt parse_function();

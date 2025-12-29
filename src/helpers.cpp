@@ -122,9 +122,14 @@ void print_stmt(const Stmt &stmt, int ident_level) {
       if constexpr (std::is_same_v<T, std::unique_ptr<Func>>) {
           ident(ident_level);
           std::cout << "Func: " << node_ptr->name << "\n";
-        for (const auto &s : node_ptr->body) {
-          print_stmt(s, ident_level+1);
-        }
+          std::visit([&] (auto &&stmt_ptr) {
+              using T2 = std::decay_t<decltype(stmt_ptr)>;
+              if constexpr (std::is_same_v<T2, std::unique_ptr<Scope>>) {
+                for (const auto &s : stmt_ptr->body) {
+                  print_stmt(s, ident_level+1);
+                }
+              }
+          }, node_ptr->body);
       }else if constexpr (std::is_same_v<T, std::unique_ptr<Def>>) {
         ident(ident_level);
         std::cout << "Def: " << node_ptr->name << " = ";
