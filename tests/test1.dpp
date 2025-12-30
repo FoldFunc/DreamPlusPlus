@@ -1,5 +1,7 @@
 function main() {
-  define x = 10;
-  define y = x;
-  return y;
+
+  define y = 10*4;
+  define x = y + 30;
+
+  return x;
 }

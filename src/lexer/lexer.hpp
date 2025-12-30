@@ -7,6 +7,9 @@ enum Keywords {
   Define,
   Return, // Need to add it in .cpp
 };
+struct FunctionCall {
+  std::string function_name;
+};
 struct Identifier {
   std::string name;
 };
@@ -22,7 +25,12 @@ struct LParent {};
 struct RParent {};
 struct Eq {};
 struct SColon{};
+struct Plus{};
+struct Minus{};
+struct Mul{};
+struct Div{};
 using Token = std::variant<
+      FunctionCall,
       Keyword,
       Identifier, 
       Number,
@@ -31,6 +39,10 @@ using Token = std::variant<
       LParent,
       RParent,
       Eq,
+      Plus,
+      Minus,
+      Mul,
+      Div,
       SColon
 >;
 class Lexer {

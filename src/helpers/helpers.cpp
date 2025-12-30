@@ -6,8 +6,8 @@
 #include <variant>
 #include <vector>
 #include "helpers.hpp"
-#include "ast.hpp"
-#include "lexer.hpp"
+#include "../ast/ast.hpp"
+#include "../lexer/lexer.hpp"
 [[noreturn]] void case_error(const std::string &msg) {
   std::cerr << "Error: " << msg << "\n";
   throw std::runtime_error(msg);
@@ -47,11 +47,32 @@ std::string token_to_string(const Token &tok) {
       else if constexpr (std::is_same_v<T, SColon>) {
       return ";";
       }
+      else if constexpr (std::is_same_v<T, Plus>) {
+      return "+";
+      }
+      else if constexpr (std::is_same_v<T, Minus>) {
+      return "-";
+      }
+      else if constexpr (std::is_same_v<T, Mul>) {
+      return "*";
+      }
+      else if constexpr (std::is_same_v<T, Div>) {
+      return "/";
+      }
+      else if constexpr (std::is_same_v<T, SColon>) {
+      return "=";
+      }
       else if constexpr (std::is_same_v<T, LBracket>) {
       return "{";
       }
       else if constexpr (std::is_same_v<T, RBracket>) {
       return "}";
+      }
+      else if constexpr (std::is_same_v<T, LParent>) {
+      return "("; 
+      }
+      else if constexpr (std::is_same_v<T, LParent>) {
+      return ")"; 
       }
       else {
         return "<unknown token>"; 
@@ -61,6 +82,9 @@ std::string token_to_string(const Token &tok) {
 
 template <typename T>
 std::string token_type_name();
+
+template <>
+std::string token_type_name<FunctionCall>() { return "FunctionCall"; }
 
 template <>
 std::string token_type_name<Identifier>() { return "Identifier"; }
@@ -87,6 +111,18 @@ template <>
 std::string token_type_name<RParent>() { return "')'"; }
 
 template <>
+std::string token_type_name<Plus>() { return "'+'"; }
+
+template <>
+std::string token_type_name<Minus>() { return "'-'"; }
+
+template <>
+std::string token_type_name<Mul>() { return "'*'"; }
+
+template <>
+std::string token_type_name<Div>() { return "'/'"; }
+
+template <>
 std::string token_type_name<Eq>() { return "'='"; }
 
 void read_file(const std::string &file_contents) {
@@ -106,13 +142,37 @@ static void ident(int n) {
   }
   std::cout << spaces;
 }
-void print_expr(const Expr &expr, int ident_level) {
-  std::visit([](auto &&node) {
+void print_expr(const Expr &expr, int indent_level) {
+  std::visit([indent_level](auto &&node) {
       using T = std::decay_t<decltype(node)>;
       if constexpr (std::is_same_v<T, IntLit>) {
         std::cout << node.value; 
       } else if constexpr (std::is_same_v<T, VarMut>) {
         std::cout << node.name;
+      } else if constexpr (std::is_same_v<T, FuncCall>) {
+        std::cout << node.name << "()";
+      } else if constexpr (std::is_same_v<T, std::unique_ptr<BinOp>>) {
+        std::cout << "(";
+        print_expr(*node->left, indent_level);
+        
+        // Print the operator
+        switch (node->op) {
+          case BinOpKind::Add:
+            std::cout << " + ";
+            break;
+          case BinOpKind::Sub:
+            std::cout << " - ";
+            break;
+          case BinOpKind::Mul:
+            std::cout << " * ";
+            break;
+          case BinOpKind::Div:
+            std::cout << " / ";
+            break;
+        }
+        
+        print_expr(*node->right, indent_level);
+        std::cout << ")";
       }
   }, expr);
 }
@@ -146,6 +206,11 @@ void print_stmt(const Stmt &stmt, int ident_level) {
         std::cout << "Return: ";
         print_expr(node_ptr->value, 0);
         std::cout << "\n";
+      } else if constexpr (std::is_same_v<T, std::unique_ptr<RetMain>>) {
+        ident(ident_level);
+        std::cout << "Return from main: ";
+        print_expr(node_ptr->value, 0);
+        std::cout << "\n";
       }
   }, stmt);
 }
@@ -155,6 +220,9 @@ void read_tokens(const std::vector<Token> &tokens) {
         using T = std::decay_t<decltype(t)>;
         if constexpr (std::is_same_v<T, Identifier>) {
         std::cout << "<Identifier: " << t.name << ">\n";
+        }
+        else if constexpr (std::is_same_v<T, FunctionCall>) {
+          std::cout << "<FunctionCall>\n";
         }
         else if constexpr (std::is_same_v<T, LBracket>) {
         std::cout << "<LeftBracket>\n";
@@ -170,6 +238,18 @@ void read_tokens(const std::vector<Token> &tokens) {
         }
         else if constexpr (std::is_same_v<T, Eq>) {
         std::cout << "<Eaqule>\n";
+        }
+        else if constexpr (std::is_same_v<T, Plus>) {
+        std::cout << "<Plus>\n";
+        }
+        else if constexpr (std::is_same_v<T, Minus>) {
+        std::cout << "<Minus>\n";
+        }
+        else if constexpr (std::is_same_v<T, Mul>) {
+        std::cout << "<Multiplication>\n";
+        }
+        else if constexpr (std::is_same_v<T, Div>) {
+        std::cout << "<Division>\n";
         }
         else if constexpr (std::is_same_v<T, SColon>) {
           std::cout << "<SemiColon>\n";
