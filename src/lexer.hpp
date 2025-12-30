@@ -7,6 +7,9 @@ enum Keywords {
   Define,
   Return, // Need to add it in .cpp
 };
+struct FunctionCall {
+  std::string function_name;
+};
 struct Identifier {
   std::string name;
 };
@@ -23,6 +26,7 @@ struct RParent {};
 struct Eq {};
 struct SColon{};
 using Token = std::variant<
+      FunctionCall,
       Keyword,
       Identifier, 
       Number,

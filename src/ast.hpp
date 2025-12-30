@@ -7,18 +7,21 @@
 
 struct Scope;
 struct Ret;
+struct RetMain;
 struct IntLit;
 struct VarMut;
 struct Func;
 struct Def;
+struct FuncCall;
 using Stmt = std::variant<
   std::unique_ptr<Def>,
   std::unique_ptr<Func>,
   std::unique_ptr<Scope>,
-  std::unique_ptr<Ret>
+  std::unique_ptr<Ret>,
+  std::unique_ptr<RetMain>
 >;
 
-using Expr = std::variant<IntLit, VarMut>;
+using Expr = std::variant<IntLit, VarMut, FuncCall>;
 struct VarMut {
   std::string name;
 };
@@ -29,6 +32,9 @@ struct Func {
   std::string name;
   Stmt body;
 };
+struct FuncCall {
+  std::string name;
+};
 struct Def {
   std::string name;
   Expr value;
@@ -36,7 +42,9 @@ struct Def {
 struct Scope {
   std::vector<Stmt> body;
 };
-
+struct RetMain {
+  Expr value;
+};
 struct Ret {
   Expr value;
 };
@@ -46,8 +54,8 @@ public:
   Ast();
   Ast(const std::vector<Token> &tokens_vec);
   std::vector<Stmt> parse();
-  Stmt parse_scope();
-  Stmt parse_return();
+  Stmt parse_scope(bool is_main);
+  Stmt parse_return(bool is_main);
   Stmt parse_define();
   Stmt parse_function();
   Expr parse_expr();

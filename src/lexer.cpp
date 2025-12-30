@@ -47,7 +47,12 @@ std::vector<Token> Lexer::tokenize() {
             if (it != keyword_map.end()) {
               result.push_back(Keyword(it->second));
             } else {
-              result.push_back(Identifier{identifier});
+              if (file_contents[i] == '(' && file_contents[i+1] == ')') {
+                result.push_back(FunctionCall{identifier});
+                i+=2;
+              } else {
+                result.push_back(Identifier{identifier});
+              }
             }
             continue;
         }

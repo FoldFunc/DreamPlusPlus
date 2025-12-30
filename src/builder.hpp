@@ -8,6 +8,7 @@ public:
   std::vector<std::string> build_asm();
   void build_function(Func f);
   void build_scope(const Stmt &s);
+  void process_stmt(const Stmt &stmt, int &stack_pos);
   std::string build_expr(Expr e);
   void push(const std::string &s);
 private:

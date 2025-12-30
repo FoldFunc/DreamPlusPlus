@@ -53,6 +53,12 @@ std::string token_to_string(const Token &tok) {
       else if constexpr (std::is_same_v<T, RBracket>) {
       return "}";
       }
+      else if constexpr (std::is_same_v<T, LParent>) {
+      return "("; 
+      }
+      else if constexpr (std::is_same_v<T, LParent>) {
+      return ")"; 
+      }
       else {
         return "<unknown token>"; 
       }
@@ -61,6 +67,9 @@ std::string token_to_string(const Token &tok) {
 
 template <typename T>
 std::string token_type_name();
+
+template <>
+std::string token_type_name<FunctionCall>() { return "FunctionCall"; }
 
 template <>
 std::string token_type_name<Identifier>() { return "Identifier"; }
@@ -113,6 +122,8 @@ void print_expr(const Expr &expr, int ident_level) {
         std::cout << node.value; 
       } else if constexpr (std::is_same_v<T, VarMut>) {
         std::cout << node.name;
+      } else if constexpr (std::is_same_v<T, FuncCall>) {
+        std::cout << node.name << "()";
       }
   }, expr);
 }
@@ -146,6 +157,11 @@ void print_stmt(const Stmt &stmt, int ident_level) {
         std::cout << "Return: ";
         print_expr(node_ptr->value, 0);
         std::cout << "\n";
+      } else if constexpr (std::is_same_v<T, std::unique_ptr<RetMain>>) {
+        ident(ident_level);
+        std::cout << "Return from main: ";
+        print_expr(node_ptr->value, 0);
+        std::cout << "\n";
       }
   }, stmt);
 }
@@ -155,6 +171,9 @@ void read_tokens(const std::vector<Token> &tokens) {
         using T = std::decay_t<decltype(t)>;
         if constexpr (std::is_same_v<T, Identifier>) {
         std::cout << "<Identifier: " << t.name << ">\n";
+        }
+        else if constexpr (std::is_same_v<T, FunctionCall>) {
+          std::cout << "<FunctionCall>\n";
         }
         else if constexpr (std::is_same_v<T, LBracket>) {
         std::cout << "<LeftBracket>\n";

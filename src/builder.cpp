@@ -33,6 +33,11 @@ std::string Builder::build_expr(Expr e) {
           std::string case_err_str = std::format("No such variable as: {}", name);
           case_error(case_err_str);
         }
+      } else if constexpr (std::is_same_v<T, FuncCall>) {
+        lines.push_back(std::format("{}call {}", std::string(indent, ' '), value.name));
+        return_val = "rax";
+      } else {
+        case_error("Invalid while converting expr to assembly.");
       }
   }, e);
   return return_val;
@@ -43,44 +48,56 @@ void Builder::push(const std::string &s) {
 }
 void Builder::build_scope(const Stmt &s) {
   int stack_pos = 0;
+  
   std::visit([this, &stack_pos] (const auto &value) {
       using T = std::decay_t<decltype(value)>;
       if constexpr (std::is_same_v<T, std::unique_ptr<Scope>>) {
-        Scope new_value = std::move(*value);
+        Scope &new_value = *value;
         for (const auto &stmt : new_value.body) {
-          std::visit([this, &stmt, &stack_pos] (const auto &stmt_val) {
-              using T2 = std::decay_t<decltype(stmt_val)>;
-              if constexpr (std::is_same_v<T2, std::unique_ptr<Def>>) {
-                auto new_stmt_val = std::move(*stmt_val);
-                std::string name = new_stmt_val.name; 
-                Expr expr = new_stmt_val.value;
-                std::string asm_expr = build_expr(expr);
-                lines.push_back(std::format("{}mov rax, {}", std::string(indent, ' '), asm_expr));
-                lines.push_back(std::format("{}mov [rbp-{}], rax", std::string(indent, ' '), stack_pointer*-1));
-                stack_pos++;
-                push(name);
-              } else if constexpr (std::is_same_v<T2, std::unique_ptr<Scope>>) {
-                  build_scope(std::move(stmt)); // AHHHHHHHHHHHHHH
-              } else if constexpr (std::is_same_v<T2, std::unique_ptr<Ret>>) {
-                  auto new_stmt_val = std::move(*stmt_val);
-                  Expr expr = new_stmt_val.value; 
-                  std::string asm_expr = build_expr(expr);
-                  lines.push_back(std::format("{}mov rax, 60", std::string(indent, ' ')));
-                  lines.push_back(std::format("{}mov rdi, {}", std::string(indent, ' '), asm_expr));
-                  lines.push_back(std::format("{}syscall", std::string(indent, ' ')));
-              } else {
-                  case_error("Functions inside functions are not supported");
-              }
-          }, stmt);
+          this->process_stmt(stmt, stack_pos);
         }
       } else {
         case_error("Should be a scope...");
       }
   }, s);
-  for (int i = 0;i<stack_pos;i++) {
+  
+  for (int i = 0; i < stack_pos; i++) {
     virtual_stack.pop_back();
     stack_pointer += 8;
   }
+}
+
+void Builder::process_stmt(const Stmt &stmt, int &stack_pos) {
+  std::visit([this, &stack_pos, &stmt] (const auto &stmt_val) {
+      using T2 = std::decay_t<decltype(stmt_val)>;
+      if constexpr (std::is_same_v<T2, std::unique_ptr<Def>>) {
+        auto &new_stmt_val = *stmt_val;
+        std::string name = new_stmt_val.name; 
+        Expr expr = new_stmt_val.value;
+        std::string asm_expr = this->build_expr(expr);
+        this->lines.push_back(std::format("{}mov rax, {}", std::string(this->indent, ' '), asm_expr));
+        this->lines.push_back(std::format("{}mov [rbp-{}], rax", std::string(this->indent, ' '), this->stack_pointer*-1));
+        stack_pos++;
+        this->push(name);
+      } else if constexpr (std::is_same_v<T2, std::unique_ptr<Scope>>) {
+        this->build_scope(stmt);
+      } else if constexpr (std::is_same_v<T2, std::unique_ptr<RetMain>>) {
+        auto &new_stmt_val = *stmt_val;
+        Expr expr = new_stmt_val.value; 
+        std::string asm_expr = this->build_expr(expr);
+        this->lines.push_back(std::format("{}mov rax, 60", std::string(this->indent, ' ')));
+        this->lines.push_back(std::format("{}mov rdi, {}", std::string(this->indent, ' '), asm_expr));
+        this->lines.push_back(std::format("{}syscall", std::string(this->indent, ' ')));
+      } else if constexpr (std::is_same_v<T2, std::unique_ptr<Ret>>) {
+        auto &new_stmt_val = *stmt_val;
+        Expr expr = new_stmt_val.value;
+        std::string asm_expr = this->build_expr(expr);
+        this->lines.push_back(std::format("{}mov rax, {}", std::string(this->indent, ' '), asm_expr));
+        this->lines.push_back(std::format("{}ret", std::string(this->indent, ' ')));
+      } else {
+        case_error("Functions inside functions are not supported");
+      }
+  }, stmt);
 }
 void Builder::build_function(Func f) {
   if (f.name == "main") {

@@ -1,7 +1,8 @@
 function main() {
-  define x = 10;
-  {
-    define y = 11;
-  }
-  return y;
+  define x = foo();
+  return x;
+}
+function foo() {
+  define local = 11;
+  return local;
 }

@@ -44,17 +44,32 @@ Expr Ast::parse_expr() {
       var.name = variable->name;
       consume<Identifier>();
       return Expr { var };
+    } else if (auto *variable = std::get_if<FunctionCall>(&current_token)) {
+      auto function_name = FuncCall();
+      function_name.name = variable->function_name;
+      consume<FunctionCall>();
+      return Expr { function_name };
     }
     case_error("Expected expression");
 }
-Stmt Ast::parse_return() {
-  auto return_val = std::make_unique<Ret>();
-  auto current_token = tokens[i];
-  auto val = parse_expr();
-  return_val->value = val;
-  consume<SColon>();
-  Stmt stmt = std::move(return_val);
-  return stmt;
+Stmt Ast::parse_return(bool is_main) {
+  if (is_main) {
+    auto return_val = std::make_unique<RetMain>();
+    auto current_token = tokens[i];
+    auto val = parse_expr();
+    return_val->value = val;
+    consume<SColon>();
+    Stmt stmt = std::move(return_val);
+    return stmt;
+  } else {
+    auto return_val = std::make_unique<Ret>();
+    auto current_token = tokens[i];
+    auto val = parse_expr();
+    return_val->value = val;
+    consume<SColon>();
+    Stmt stmt = std::move(return_val);
+    return stmt;
+  }
 }
 Stmt Ast::parse_define() {
   auto define_val = std::make_unique<Def>();
@@ -76,7 +91,7 @@ Stmt Ast::parse_define() {
   return stmt;
 
 }
-Stmt Ast::parse_scope() {
+Stmt Ast::parse_scope(bool is_main) {
   std::vector<Stmt> scope;
   auto current_token = tokens[i];
   while (!std::holds_alternative<RBracket>(current_token)) {
@@ -94,7 +109,7 @@ Stmt Ast::parse_scope() {
           scope.push_back(std::move(define));
         } else if (keyword == Return) {
           consume<Keyword>();
-          Stmt return_val = parse_return();
+          Stmt return_val = parse_return(is_main);
           scope.push_back(std::move(return_val));
         }
       }
@@ -104,7 +119,7 @@ Stmt Ast::parse_scope() {
     }
     else if (std::holds_alternative<LBracket>(current_token)){
       consume<LBracket>();
-      Stmt inner = parse_scope();
+      Stmt inner = parse_scope(is_main);
       scope.push_back(std::move(inner));
     }
   }
@@ -116,21 +131,24 @@ Stmt Ast::parse_scope() {
 Stmt Ast::parse_function() {
   auto function = std::make_unique<Func>();
   auto name_parse = tokens[i];
-  if (std::holds_alternative<Identifier>(name_parse)) {
-    if (auto *kw = std::get_if<Identifier>(&name_parse)) {
-      std::string name = kw->name; // Can and will blow you here
+  if (std::holds_alternative<FunctionCall>(name_parse)) {
+    if (auto *kw = std::get_if<FunctionCall>(&name_parse)) {
+      std::string name = kw->function_name;
       function->name = name;
     } else {
       case_error("Invalid after a function declaretion.");
     }
   } else {
-    case_error("Invalid after a function declaration.");
+    case_error("Invalid after a function declaration...");
   }
-  consume<Identifier>();
-  consume<LParent>();
-  consume<RParent>();
+  consume<FunctionCall>();
   consume<LBracket>();
-  Stmt body = parse_scope();
+  Stmt body;
+  if (function->name == "main") {
+    body = parse_scope(true);
+  } else {
+    body = parse_scope(false);
+  }
   function->body = std::move(body);
   Stmt stmt = std::move(function);
   return stmt;
@@ -149,7 +167,7 @@ std::vector<Stmt> Ast::parse() {
           result.push_back(parse_define());
         } else if (kw->keyword == Keywords::Return) {
           consume<Keyword>();
-          result.push_back(parse_return());
+          result.push_back(parse_return(false));
         } else {
           case_error("Not supported for now");
         }
