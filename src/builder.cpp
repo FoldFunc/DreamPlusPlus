@@ -108,10 +108,15 @@ void Builder::build_function(Func f) {
     lines.push_back(std::format("{}mov rbp, rsp", std::string(indent, ' ')));
     lines.push_back(std::format("{}sub rsp, 16", std::string(indent, ' ')));
     build_scope(std::move(f.body));
+    lines.insert(lines.end()-1, std::format("{}leave", std::string(indent, ' ')));
   } else {
-    lines.push_back(std::format("{}:", f.name));
-    build_scope(std::move(f.body));
     indent = 2;
+    lines.push_back(std::format("{}:", f.name));
+    //lines.push_back(std::format("{}push rbp", std::string(indent, ' ')));
+    //lines.push_back(std::format("{}mov rbp, rsp", std::string(indent, ' ')));
+    //lines.push_back(std::format("{}sub rsp, 16", std::string(indent, ' ')));
+    build_scope(std::move(f.body));
+    lines.insert(lines.end()-1, std::format("{}leave", std::string(indent, ' ')));
   }
 }
 std::vector<std::string> Builder::build_asm() {
