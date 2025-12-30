@@ -1,8 +1,7 @@
 function main() {
-  define x = 120;
-  define y = 119;
-  define z = 119;
-  define a = 119;
-  define b = 118;
-  return b;
+  define x = 10;
+  {
+    define y = 11;
+  }
+  return y;
 }

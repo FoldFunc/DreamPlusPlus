@@ -102,8 +102,10 @@ Stmt Ast::parse_scope() {
     else if (std::holds_alternative<RBracket>(current_token)) {
       break;
     }
-    else {
-      case_error("Not an someting idk.");
+    else if (std::holds_alternative<LBracket>(current_token)){
+      consume<LBracket>();
+      Stmt inner = parse_scope();
+      scope.push_back(std::move(inner));
     }
   }
   consume<RBracket>();

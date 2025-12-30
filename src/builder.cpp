@@ -42,12 +42,13 @@ void Builder::push(const std::string &s) {
   stack_pointer -= 8;
 }
 void Builder::build_scope(const Stmt &s) {
-  std::visit([this] (const auto &value) {
+  int stack_pos = 0;
+  std::visit([this, &stack_pos] (const auto &value) {
       using T = std::decay_t<decltype(value)>;
       if constexpr (std::is_same_v<T, std::unique_ptr<Scope>>) {
         Scope new_value = std::move(*value);
         for (const auto &stmt : new_value.body) {
-          std::visit([this, &stmt] (const auto &stmt_val) {
+          std::visit([this, &stmt, &stack_pos] (const auto &stmt_val) {
               using T2 = std::decay_t<decltype(stmt_val)>;
               if constexpr (std::is_same_v<T2, std::unique_ptr<Def>>) {
                 auto new_stmt_val = std::move(*stmt_val);
@@ -56,6 +57,7 @@ void Builder::build_scope(const Stmt &s) {
                 std::string asm_expr = build_expr(expr);
                 lines.push_back(std::format("{}mov rax, {}", std::string(indent, ' '), asm_expr));
                 lines.push_back(std::format("{}mov [rbp-{}], rax", std::string(indent, ' '), stack_pointer*-1));
+                stack_pos++;
                 push(name);
               } else if constexpr (std::is_same_v<T2, std::unique_ptr<Scope>>) {
                   build_scope(std::move(stmt)); // AHHHHHHHHHHHHHH
@@ -75,6 +77,10 @@ void Builder::build_scope(const Stmt &s) {
         case_error("Should be a scope...");
       }
   }, s);
+  for (int i = 0;i<stack_pos;i++) {
+    virtual_stack.pop_back();
+    stack_pointer += 8;
+  }
 }
 void Builder::build_function(Func f) {
   if (f.name == "main") {
