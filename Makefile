@@ -5,7 +5,7 @@ SRC := src
 BUILD := build
 TARGET := $(BUILD)/compiler
 
-SRCS := $(wildcard $(SRC)/*.cpp)
+SRCS := $(shell find $(SRC) -name "*.cpp")
 OBJS := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(SRCS))
 
 .PHONY: all clean

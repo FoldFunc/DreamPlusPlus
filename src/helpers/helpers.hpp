@@ -2,8 +2,8 @@
 
 #include <string>
 #include <vector>
-#include "ast.hpp"
-#include "lexer.hpp"
+#include "../ast/ast.hpp"
+#include "../lexer/lexer.hpp"
 [[noreturn]] void case_error(const std::string &msg);
 std::string get_file(const std::string &filename);
 void read_file(const std::string &file_contents);

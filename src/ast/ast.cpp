@@ -1,6 +1,6 @@
 #include "ast.hpp"
-#include "helpers.hpp"
-#include "lexer.hpp"
+#include "../helpers/helpers.hpp"
+#include "../lexer/lexer.hpp"
 #include <charconv>
 #include <memory>
 #include <variant>
@@ -32,32 +32,83 @@ bool Ast::consume() {
   return false;
 }
 Expr Ast::parse_expr() {
+  Expr left = parse_primary();
+
+  while (i < tokens.size()) {
     Token current_token = tokens[i];
-    if (auto* num = std::get_if<Number>(&current_token)) {
-        auto lit = IntLit();
-        lit.value = num->value;
-        consume<Number>();
-        return Expr{ lit };
-    }
-    else if (auto *variable = std::get_if<Identifier>(&current_token)) {
-      auto var = VarMut();
-      var.name = variable->name;
-      consume<Identifier>();
-      return Expr { var };
-    } else if (auto *variable = std::get_if<FunctionCall>(&current_token)) {
-      auto function_name = FuncCall();
-      function_name.name = variable->function_name;
-      consume<FunctionCall>();
-      return Expr { function_name };
-    }
-    case_error("Expected expression");
+    if (std::holds_alternative<Plus>(current_token)) {
+      consume<Plus>();
+      Expr right = parse_primary();
+
+      auto binop = BinOp();
+      binop.op = BinOpKind::Add;
+      binop.left = std::make_unique<Expr>(std::move(left));
+      binop.right = std::make_unique<Expr>(std::move(right));
+
+      left = Expr{ std::make_unique<BinOp>(std::move(binop))};
+    }else if (std::holds_alternative<Minus>(current_token)) {
+      consume<Minus>();
+      Expr right = parse_primary();
+
+      auto binop = BinOp();
+      binop.op = BinOpKind::Sub;
+      binop.left = std::make_unique<Expr>(std::move(left));
+      binop.right = std::make_unique<Expr>(std::move(right));
+
+      left = Expr{ std::make_unique<BinOp>(std::move(binop))};
+    } else if (std::holds_alternative<Mul>(current_token)) {
+      consume<Mul>();
+      Expr right = parse_primary();
+
+      auto binop = BinOp();
+      binop.op = BinOpKind::Mul;
+      binop.left = std::make_unique<Expr>(std::move(left));
+      binop.right = std::make_unique<Expr>(std::move(right));
+
+      left = Expr{ std::make_unique<BinOp>(std::move(binop))};
+
+    } else if (std::holds_alternative<Div>(current_token)) {
+      consume<Div>();
+      Expr right = parse_primary();
+
+      auto binop = BinOp();
+      binop.op = BinOpKind::Div;
+      binop.left = std::make_unique<Expr>(std::move(left));
+      binop.right = std::make_unique<Expr>(std::move(right));
+
+      left = Expr{ std::make_unique<BinOp>(std::move(binop))};
+    } else {
+      break;
+   }
+  }
+  return left;
+}
+Expr Ast::parse_primary() {
+  Token current_token = tokens[i];
+  if (auto *num = std::get_if<Number>(&current_token)) {
+    auto lit = IntLit();
+    lit.value = num->value;
+    consume<Number>();
+    return Expr{ lit };
+  } else if (auto *variable = std::get_if<Identifier>(&current_token)) {
+    auto var = VarMut();
+    var.name = variable->name;
+    consume<Identifier>();
+    return Expr{ var };
+  } else if (auto *function = std::get_if<FunctionCall>(&current_token)) {
+    auto func = FuncCall();
+    func.name = function->function_name;
+    consume<Identifier>();
+    return Expr{ func };
+  }
+  case_error("Expected expression");
 }
 Stmt Ast::parse_return(bool is_main) {
   if (is_main) {
     auto return_val = std::make_unique<RetMain>();
     auto current_token = tokens[i];
     auto val = parse_expr();
-    return_val->value = val;
+    return_val->value = std::move(val);
     consume<SColon>();
     Stmt stmt = std::move(return_val);
     return stmt;
@@ -65,7 +116,7 @@ Stmt Ast::parse_return(bool is_main) {
     auto return_val = std::make_unique<Ret>();
     auto current_token = tokens[i];
     auto val = parse_expr();
-    return_val->value = val;
+    return_val->value = std::move(val);
     consume<SColon>();
     Stmt stmt = std::move(return_val);
     return stmt;
@@ -85,7 +136,7 @@ Stmt Ast::parse_define() {
   }
   consume<Eq>();
   auto expr = parse_expr();
-  define_val->value = expr;
+  define_val->value = std::move(expr);
   Stmt stmt = std::move(define_val);
   consume<SColon>();
   return stmt;

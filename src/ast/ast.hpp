@@ -1,6 +1,6 @@
 #pragma once
 
-#include "lexer.hpp"
+#include "../lexer/lexer.hpp"
 #include <variant>
 #include <vector>
 #include <memory>
@@ -13,6 +13,7 @@ struct VarMut;
 struct Func;
 struct Def;
 struct FuncCall;
+struct BinOp;
 using Stmt = std::variant<
   std::unique_ptr<Def>,
   std::unique_ptr<Func>,
@@ -21,7 +22,20 @@ using Stmt = std::variant<
   std::unique_ptr<RetMain>
 >;
 
-using Expr = std::variant<IntLit, VarMut, FuncCall>;
+using Expr = std::variant<IntLit, VarMut, FuncCall, std::unique_ptr<BinOp>>;
+
+enum class BinOpKind {
+  Add, 
+  Sub,
+  Mul,
+  Div
+};
+
+struct BinOp {
+  BinOpKind op;
+  std::unique_ptr<Expr> left;
+  std::unique_ptr<Expr> right;
+};
 struct VarMut {
   std::string name;
 };
@@ -59,6 +73,7 @@ public:
   Stmt parse_define();
   Stmt parse_function();
   Expr parse_expr();
+  Expr parse_primary();
   template <typename T>
   bool consume();
 private:

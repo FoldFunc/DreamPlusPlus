@@ -3,10 +3,10 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "helpers.hpp"
-#include "lexer.hpp"
-#include "ast.hpp"
-#include "builder.hpp"
+#include "helpers/helpers.hpp"
+#include "lexer/lexer.hpp"
+#include "ast/ast.hpp"
+#include "builder/builder.hpp"
 int main(int argc, char *argv[]) {
   if (argc != 2) {
     case_error("Incorrect usage.\nCorrect usage: ./compiler <filename_to_compile>");

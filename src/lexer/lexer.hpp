@@ -25,6 +25,10 @@ struct LParent {};
 struct RParent {};
 struct Eq {};
 struct SColon{};
+struct Plus{};
+struct Minus{};
+struct Mul{};
+struct Div{};
 using Token = std::variant<
       FunctionCall,
       Keyword,
@@ -35,6 +39,10 @@ using Token = std::variant<
       LParent,
       RParent,
       Eq,
+      Plus,
+      Minus,
+      Mul,
+      Div,
       SColon
 >;
 class Lexer {

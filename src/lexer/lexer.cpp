@@ -5,9 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include "lexer.hpp"
-#include "helpers.hpp"
-// Lparent = (
-// RParent = )
+#include "../helpers/helpers.hpp"
 Lexer::Lexer()
   : file_contents() {}
 Lexer::Lexer(const std::string &file) 
@@ -90,6 +88,18 @@ std::vector<Token> Lexer::tokenize() {
                 break;
             case ';':
                 result.push_back(SColon{});
+                break;
+            case '+':
+                result.push_back(Plus{});
+                break;
+            case '-':
+                result.push_back(Minus{});
+                break;
+            case '*':
+                result.push_back(Mul{});
+                break;
+            case '/':
+                result.push_back(Div{});
                 break;
             default:
                 case_error("Invalid char");

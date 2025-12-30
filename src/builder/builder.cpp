@@ -1,5 +1,5 @@
-#include "ast.hpp"
-#include "helpers.hpp"
+#include "../ast/ast.hpp"
+#include "../helpers/helpers.hpp"
 #include "builder.hpp"
 #include <algorithm>
 #include <format>
@@ -73,8 +73,8 @@ void Builder::process_stmt(const Stmt &stmt, int &stack_pos) {
       if constexpr (std::is_same_v<T2, std::unique_ptr<Def>>) {
         auto &new_stmt_val = *stmt_val;
         std::string name = new_stmt_val.name; 
-        Expr expr = new_stmt_val.value;
-        std::string asm_expr = this->build_expr(expr);
+        Expr expr = std::move(new_stmt_val.value);
+        std::string asm_expr = this->build_expr(std::move(expr));
         this->lines.push_back(std::format("{}mov rax, {}", std::string(this->indent, ' '), asm_expr));
         this->lines.push_back(std::format("{}mov [rbp-{}], rax", std::string(this->indent, ' '), this->stack_pointer*-1));
         stack_pos++;
@@ -83,15 +83,15 @@ void Builder::process_stmt(const Stmt &stmt, int &stack_pos) {
         this->build_scope(stmt);
       } else if constexpr (std::is_same_v<T2, std::unique_ptr<RetMain>>) {
         auto &new_stmt_val = *stmt_val;
-        Expr expr = new_stmt_val.value; 
-        std::string asm_expr = this->build_expr(expr);
+        Expr expr = std::move(new_stmt_val.value); 
+        std::string asm_expr = this->build_expr(std::move(expr));
         this->lines.push_back(std::format("{}mov rax, 60", std::string(this->indent, ' ')));
         this->lines.push_back(std::format("{}mov rdi, {}", std::string(this->indent, ' '), asm_expr));
         this->lines.push_back(std::format("{}syscall", std::string(this->indent, ' ')));
       } else if constexpr (std::is_same_v<T2, std::unique_ptr<Ret>>) {
         auto &new_stmt_val = *stmt_val;
-        Expr expr = new_stmt_val.value;
-        std::string asm_expr = this->build_expr(expr);
+        Expr expr = std::move(new_stmt_val.value);
+        std::string asm_expr = this->build_expr(std::move(expr));
         this->lines.push_back(std::format("{}mov rax, {}", std::string(this->indent, ' '), asm_expr));
         this->lines.push_back(std::format("{}ret", std::string(this->indent, ' ')));
       } else {
