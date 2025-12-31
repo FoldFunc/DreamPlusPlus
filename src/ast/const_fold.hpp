@@ -7,8 +7,9 @@ public:
   ConstFold();
   ConstFold(std::vector<Stmt> &&s);
 
-  void const_fold();
+  std::vector<Stmt> const_fold();
   Expr const_fold_expr(Expr e);
+  Stmt const_fold_scope(Stmt scope);
 private:
   std::vector<Stmt> stmts;
 };

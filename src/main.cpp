@@ -6,6 +6,7 @@
 #include "helpers/helpers.hpp"
 #include "lexer/lexer.hpp"
 #include "ast/ast.hpp"
+#include "ast/const_fold.hpp"
 #include "builder/builder.hpp"
 int main(int argc, char *argv[]) {
   if (argc != 2) {
@@ -24,7 +25,11 @@ int main(int argc, char *argv[]) {
   auto ast_tokens = ast.parse();
   read_ast_tokens(ast_tokens);
 
-  Builder builder(std::move(ast_tokens));
+  ConstFold folder(std::move(ast_tokens));
+  auto fold_tokens = folder.const_fold();
+  read_ast_tokens(fold_tokens);
+
+  Builder builder(std::move(fold_tokens));
   const std::vector<std::string> asm_lines = builder.build_asm();
   for (const std::string line : asm_lines)  {
     std::cout << line << "\n";
