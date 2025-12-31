@@ -58,6 +58,7 @@ std::vector<Token> Lexer::tokenize() {
 
       std::unordered_map<std::string, Types> type_map = {
         {"int", Int},
+        {"char", Ch},
       };
 
       auto it1 = type_map.find(identifier);
@@ -114,6 +115,23 @@ std::vector<Token> Lexer::tokenize() {
         break;
       case '/':
         result.push_back(Div{});
+        break;
+      case '\"':
+        result.push_back(Dq{});
+        break;
+      case '\'':
+        {
+          i++;
+          if (i>= file_contents.size()) {
+            case_error("Unterminated char");
+          }
+          char char_value = file_contents[i];
+          i++;
+          if (i >= file_contents.size() || file_contents[i] != '\'') {
+            case_error("Expected closing the single quote");
+          }
+          result.push_back(CharLexer{char_value});
+        }
         break;
       default:
         case_error("Invalid char");

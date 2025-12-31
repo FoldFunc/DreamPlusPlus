@@ -4,6 +4,7 @@
 #include <vector>
 enum Types {
   Int,
+  Ch,
 };
 enum Keywords {
   Function,
@@ -16,6 +17,9 @@ struct FunctionCall {
 };
 struct Identifier {
   std::string name;
+};
+struct CharLexer {
+  char value;
 };
 struct Number {
   int value;
@@ -33,12 +37,15 @@ struct Plus{};
 struct Minus{};
 struct Mul{};
 struct Div{};
+struct Sq{};
+struct Dq{};
 using Token = std::variant<
       FunctionCall,
       Keyword,
       Types,
       Identifier, 
       Number,
+      CharLexer,
       LBracket, 
       RBracket,
       LParent,
@@ -48,7 +55,9 @@ using Token = std::variant<
       Minus,
       Mul,
       Div,
-      SColon
+      SColon,
+      Sq,
+      Dq
 >;
 class Lexer {
 public:

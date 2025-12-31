@@ -14,6 +14,7 @@ struct Func;
 struct Def;
 struct FuncCall;
 struct BinOp;
+struct Chara;
 using Stmt = std::variant<
   std::unique_ptr<Def>,
   std::unique_ptr<Func>,
@@ -22,7 +23,7 @@ using Stmt = std::variant<
   std::unique_ptr<RetMain>
 >;
 
-using Expr = std::variant<IntLit, VarMut, FuncCall, std::unique_ptr<BinOp>>;
+using Expr = std::variant<IntLit, Chara, VarMut, FuncCall, std::unique_ptr<BinOp>>;
 
 enum class BinOpKind {
   Add, 
@@ -32,6 +33,7 @@ enum class BinOpKind {
 };
 enum class Type {
   Integer, 
+  Character,
 };
 struct BinOp {
   BinOpKind op;
@@ -40,6 +42,9 @@ struct BinOp {
 };
 struct VarMut {
   std::string name;
+};
+struct Chara {
+  char value;
 };
 struct IntLit {
   int value;

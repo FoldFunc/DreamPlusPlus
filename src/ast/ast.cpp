@@ -2,6 +2,7 @@
 #include "../helpers/helpers.hpp"
 #include "../lexer/lexer.hpp"
 #include <charconv>
+#include <format>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -100,8 +101,14 @@ Expr Ast::parse_primary() {
     func.name = function->function_name;
     consume<Identifier>();
     return Expr{ func };
+  } else if (auto *character = std::get_if<CharLexer>(&current_token)) {
+    auto ch = Chara();
+    ch.value = character->value;
+    consume<CharLexer>();
+    return Expr{ ch };
   }
-  case_error("Expected expression");
+  std::string case_err_str = std::format("Expected expression got: {}", token_to_string(current_token));
+  case_error(case_err_str);
 }
 Stmt Ast::parse_return(bool is_main) {
   if (is_main) {
@@ -129,8 +136,8 @@ Type Ast::parse_type() {
       using T = std::decay_t<decltype(value)>;
       if constexpr (std::is_same_v<T, Types>) {
         switch (value) {
-          case Int:
-            return Type::Integer;
+          case Int: return Type::Integer;
+          case Ch: return Type::Character;
         } 
       }
     case_error("Should be a return type");

@@ -1,7 +1,7 @@
 function main() {
 
-  define y as int = 10*4;
-  define x as int = y + 30;
+  define x as int = 0;
+  define c as char = 'f';
 
-  return x;
+  return c;
 }
