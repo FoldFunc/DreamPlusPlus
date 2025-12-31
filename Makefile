@@ -1,6 +1,5 @@
 CXX := g++
 CXXFLAGS := -std=c++23 -Wall -Wextra -O2
-
 SRC := src
 BUILD := build
 TARGET := $(BUILD)/compiler
@@ -10,14 +9,15 @@ OBJS := $(patsubst $(SRC)/%.cpp,$(BUILD)/%.o,$(SRCS))
 
 .PHONY: all clean
 
-all : $(TARGET)
+all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	@mkdir -p $(BUILD)
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 $(BUILD)/%.o: $(SRC)/%.cpp
-	@mkdir -p $(BUILD)
+	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
 clean:
 	rm -rf $(BUILD)

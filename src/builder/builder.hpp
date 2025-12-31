@@ -11,6 +11,7 @@ public:
   void process_stmt(const Stmt &stmt, int &stack_pos);
   std::string build_expr(Expr e);
   void push(const std::string &s);
+  std::vector<std::pair<std::string, int>> find_mutables_and_values(BinOp &operation);
 private:
   std::vector<std::string> lines;
   std::vector<Stmt> s;
