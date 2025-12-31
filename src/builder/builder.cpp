@@ -36,6 +36,8 @@ std::string Builder::build_expr(Expr e) {
       } else if constexpr (std::is_same_v<T, FuncCall>) {
         lines.push_back(std::format("{}call {}", std::string(indent, ' '), value.name));
         return_val = "rax";
+      } else if constexpr (std::is_same_v<T, Chara>) {
+        return_val = std::format("\'{}\'", value.value);
       } else if constexpr (std::is_same_v<T, std::unique_ptr<BinOp>>) {
         std::string left_reg = build_expr(std::move(*value->left));
         lines.push_back(std::format("{}push {}", std::string(indent, ' '), left_reg));

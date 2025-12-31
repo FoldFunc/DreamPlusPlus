@@ -16,6 +16,8 @@ Expr ConstFold::const_fold_expr(Expr e) {
     using T = std::decay_t<decltype(value)>;
     if constexpr (std::is_same_v<T, IntLit>) {
       return Expr{IntLit{value}};
+    } else if constexpr (std::is_same_v<T, Chara>) {
+      return Expr{Chara{value}};
     } else if constexpr (std::is_same_v<T, VarMut>) {
       return Expr{VarMut{value}};
     } else if constexpr (std::is_same_v<T, FuncCall>) {

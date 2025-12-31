@@ -14,6 +14,7 @@ struct Func;
 struct Def;
 struct FuncCall;
 struct BinOp;
+struct Chara;
 using Stmt = std::variant<
   std::unique_ptr<Def>,
   std::unique_ptr<Func>,
@@ -22,7 +23,7 @@ using Stmt = std::variant<
   std::unique_ptr<RetMain>
 >;
 
-using Expr = std::variant<IntLit, VarMut, FuncCall, std::unique_ptr<BinOp>>;
+using Expr = std::variant<IntLit, Chara, VarMut, FuncCall, std::unique_ptr<BinOp>>;
 
 enum class BinOpKind {
   Add, 
@@ -30,7 +31,10 @@ enum class BinOpKind {
   Mul,
   Div
 };
-
+enum class Type {
+  Integer, 
+  Character,
+};
 struct BinOp {
   BinOpKind op;
   std::unique_ptr<Expr> left;
@@ -38,6 +42,9 @@ struct BinOp {
 };
 struct VarMut {
   std::string name;
+};
+struct Chara {
+  char value;
 };
 struct IntLit {
   int value;
@@ -52,6 +59,7 @@ struct FuncCall {
 struct Def {
   std::string name;
   Expr value;
+  Type type;
 };
 struct Scope {
   std::vector<Stmt> body;
@@ -71,6 +79,7 @@ public:
   Stmt parse_scope(bool is_main);
   Stmt parse_return(bool is_main);
   Stmt parse_define();
+  Type parse_type();
   Stmt parse_function();
   Expr parse_expr();
   Expr parse_primary();

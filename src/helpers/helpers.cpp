@@ -23,10 +23,17 @@ std::string get_file(const std::string &filename) {
       std::istreambuf_iterator<char>()
       );
 }
-
+std::string type_to_string(Types t) {
+  switch (t) {
+    case Types::Int: return "int"; 
+    case Types::Ch: return "char"; 
+    default: return "<unknown type>";
+  }
+}
 std::string keyword_to_string(Keywords k) {
   switch (k) {
     case Keywords::Function: return "function";
+    case Keywords::As : return "type declaration";
     case Keywords::Define:   return "define";
     case Keywords::Return:   return "return";
     default:                 return "<unknown keyword>";
@@ -38,8 +45,17 @@ std::string token_to_string(const Token &tok) {
       if constexpr (std::is_same_v<T, Identifier>) {
       return "Identifier(" + t.name + ")";
       }
+      else if constexpr (std::is_same_v<T, Types>) {
+        switch (t) {
+          case Types::Int: return "Type(Int)";
+          case Types::Ch: return "Type(Char)";
+        }
+      }
       else if constexpr (std::is_same_v<T, Number>) {
       return "Number(" + std::to_string(t.value) + ")";
+      }
+      else if constexpr (std::is_same_v<T, CharLexer>) {
+      return "Char(" + std::to_string(t.value) + ")";
       }
       else if constexpr (std::is_same_v<T, Keyword>) {
       return "Keyword(" + keyword_to_string(t.keyword) + ")";
@@ -90,7 +106,13 @@ template <>
 std::string token_type_name<Identifier>() { return "Identifier"; }
 
 template <>
+std::string token_type_name<Types>() { return "Types"; }
+
+template <>
 std::string token_type_name<Number>() { return "Number"; }
+
+template <>
+std::string token_type_name<CharLexer>() { return "Char"; }
 
 template <>
 std::string token_type_name<Keyword>() { return "Keyword"; }
@@ -142,6 +164,12 @@ static void ident(int n) {
   }
   std::cout << spaces;
 }
+void print_type(const Type &t, int indent_level) {
+  switch (t) {
+    case Type::Integer: std::cout << "type: int ";break;
+    case Type::Character: std::cout << "type: char ";break;
+ }
+}
 void print_expr(const Expr &expr, int indent_level) {
   std::visit([indent_level](auto &&node) {
       using T = std::decay_t<decltype(node)>;
@@ -151,6 +179,8 @@ void print_expr(const Expr &expr, int indent_level) {
         std::cout << node.name;
       } else if constexpr (std::is_same_v<T, FuncCall>) {
         std::cout << node.name << "()";
+      } else if constexpr (std::is_same_v<T, Chara>) {
+        std::cout << "\'" << node.value << "\'";
       } else if constexpr (std::is_same_v<T, std::unique_ptr<BinOp>>) {
         std::cout << "(";
         print_expr(*node->left, indent_level);
@@ -192,7 +222,9 @@ void print_stmt(const Stmt &stmt, int ident_level) {
           }, node_ptr->body);
       }else if constexpr (std::is_same_v<T, std::unique_ptr<Def>>) {
         ident(ident_level);
-        std::cout << "Def: " << node_ptr->name << " = ";
+        std::cout << "Def: ";
+        print_type(node_ptr->type, 0);
+        std::cout << node_ptr->name << " = ";
         print_expr(node_ptr->value, 0);
         std::cout << "\n";
       } else if constexpr (std::is_same_v<T, std::unique_ptr<Scope>>) {
@@ -257,14 +289,16 @@ void read_tokens(const std::vector<Token> &tokens) {
         else if constexpr (std::is_same_v<T, Number>) {
           std::cout << "<Number: " << t.value << ">" << "\n";
         }
-        else if constexpr (std::is_same_v<T, Keyword>){
-          if (t.keyword == 0) {
-            std::cout << "<Keyword: Function>" << "\n";
-          } else if (t.keyword == 1) {
-            std::cout << "<Keyword: Define>" << "\n";
-          } else if (t.keyword == 2) {
-            std::cout << "<Keyword: Return>" << "\n";
-          }
+        else if constexpr (std::is_same_v<T, CharLexer>) {
+          std::cout << "<Char: " << t.value << ">" << "\n";
+        } else if constexpr (std::is_same_v<T, Types>) {
+          std::cout << "<Type: " << type_to_string(t) << ">\n"; 
+        } else if constexpr (std::is_same_v<T, Keyword>) {
+          std::cout << "<Keyword: " << keyword_to_string(t.keyword) << ">\n";
+        } else if constexpr (std::is_same_v<T, Sq>) {
+          std::cout << "<Single quote>" << "\n";
+        } else if constexpr (std::is_same_v<T, Dq>) {
+          std::cout << "<Double quote>" << "\n";
         }
     }, token);
   }

@@ -2,6 +2,7 @@
 #include "../helpers/helpers.hpp"
 #include "../lexer/lexer.hpp"
 #include <charconv>
+#include <format>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -100,8 +101,14 @@ Expr Ast::parse_primary() {
     func.name = function->function_name;
     consume<Identifier>();
     return Expr{ func };
+  } else if (auto *character = std::get_if<CharLexer>(&current_token)) {
+    auto ch = Chara();
+    ch.value = character->value;
+    consume<CharLexer>();
+    return Expr{ ch };
   }
-  case_error("Expected expression");
+  std::string case_err_str = std::format("Expected expression got: {}", token_to_string(current_token));
+  case_error(case_err_str);
 }
 Stmt Ast::parse_return(bool is_main) {
   if (is_main) {
@@ -122,6 +129,20 @@ Stmt Ast::parse_return(bool is_main) {
     return stmt;
   }
 }
+Type Ast::parse_type() {
+  auto current_token = tokens[i];
+  consume<Types>();
+  return std::visit([this] (auto &&value) -> Type {
+      using T = std::decay_t<decltype(value)>;
+      if constexpr (std::is_same_v<T, Types>) {
+        switch (value) {
+          case Int: return Type::Integer;
+          case Ch: return Type::Character;
+        } 
+      }
+    case_error("Should be a return type");
+  }, current_token);
+}
 Stmt Ast::parse_define() {
   auto define_val = std::make_unique<Def>();
   auto current_token = tokens[i];
@@ -134,9 +155,12 @@ Stmt Ast::parse_define() {
   } else {
     case_error("Invalid in define.");
   }
+  consume<Keyword>();
+  auto type = parse_type();
   consume<Eq>();
   auto expr = parse_expr();
   define_val->value = std::move(expr);
+  define_val->type = std::move(type);
   Stmt stmt = std::move(define_val);
   consume<SColon>();
   return stmt;
