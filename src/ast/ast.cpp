@@ -122,6 +122,20 @@ Stmt Ast::parse_return(bool is_main) {
     return stmt;
   }
 }
+Type Ast::parse_type() {
+  auto current_token = tokens[i];
+  consume<Types>();
+  return std::visit([this] (auto &&value) -> Type {
+      using T = std::decay_t<decltype(value)>;
+      if constexpr (std::is_same_v<T, Types>) {
+        switch (value) {
+          case Int:
+            return Type::Integer;
+        } 
+      }
+    case_error("Should be a return type");
+  }, current_token);
+}
 Stmt Ast::parse_define() {
   auto define_val = std::make_unique<Def>();
   auto current_token = tokens[i];
@@ -134,9 +148,12 @@ Stmt Ast::parse_define() {
   } else {
     case_error("Invalid in define.");
   }
+  consume<Keyword>();
+  auto type = parse_type();
   consume<Eq>();
   auto expr = parse_expr();
   define_val->value = std::move(expr);
+  define_val->type = std::move(type);
   Stmt stmt = std::move(define_val);
   consume<SColon>();
   return stmt;

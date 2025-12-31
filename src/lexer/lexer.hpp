@@ -2,10 +2,14 @@
 #include <string>
 #include <variant>
 #include <vector>
+enum Types {
+  Int,
+};
 enum Keywords {
   Function,
   Define,
-  Return, // Need to add it in .cpp
+  Return,
+  As,
 };
 struct FunctionCall {
   std::string function_name;
@@ -32,6 +36,7 @@ struct Div{};
 using Token = std::variant<
       FunctionCall,
       Keyword,
+      Types,
       Identifier, 
       Number,
       LBracket, 

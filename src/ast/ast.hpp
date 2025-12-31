@@ -30,7 +30,9 @@ enum class BinOpKind {
   Mul,
   Div
 };
-
+enum class Type {
+  Integer, 
+};
 struct BinOp {
   BinOpKind op;
   std::unique_ptr<Expr> left;
@@ -52,6 +54,7 @@ struct FuncCall {
 struct Def {
   std::string name;
   Expr value;
+  Type type;
 };
 struct Scope {
   std::vector<Stmt> body;
@@ -71,6 +74,7 @@ public:
   Stmt parse_scope(bool is_main);
   Stmt parse_return(bool is_main);
   Stmt parse_define();
+  Type parse_type();
   Stmt parse_function();
   Expr parse_expr();
   Expr parse_primary();
