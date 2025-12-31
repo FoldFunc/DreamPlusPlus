@@ -36,7 +36,43 @@ std::string Builder::build_expr(Expr e) {
       } else if constexpr (std::is_same_v<T, FuncCall>) {
         lines.push_back(std::format("{}call {}", std::string(indent, ' '), value.name));
         return_val = "rax";
-      } else {
+      } else if constexpr (std::is_same_v<T, std::unique_ptr<BinOp>>) {
+        std::string left_reg = build_expr(std::move(*value->left));
+        lines.push_back(std::format("{}push {}", std::string(indent, ' '), left_reg));
+
+        std::string right_reg= build_expr(std::move(*value->right));
+
+        lines.push_back(std::format("{}pop rcx", std::string(indent, ' ')));
+        lines.push_back(std::format("{}mov rax, rcx", std::string(indent, ' ')));
+
+        switch (value->op) {
+          case BinOpKind::Add:
+            lines.push_back(std::format("{}add rax, {}", std::string(indent, ' '), right_reg));
+            break;
+          case BinOpKind::Sub:
+            lines.push_back(std::format("{}sub rax, {}", std::string(indent, ' '), right_reg));
+            break;
+          case BinOpKind::Mul:
+            if (right_reg != "rbx") {
+              lines.push_back(std::format("{}mov rbx, {}", std::string(indent, ' '), right_reg));
+              lines.push_back(std::format("{}imul rax, rbx", std::string(indent, ' ')));
+            } else {
+              lines.push_back(std::format("{}imul rax, {}", std::string(indent, ' '), right_reg));
+            }
+            break;
+          case BinOpKind::Div:
+            lines.push_back(std::format("{}xor rdx, rdx", std::string(indent, ' ')));
+            if (right_reg != "rbx") {
+              lines.push_back(std::format("{}mov rbx, {}", std::string(indent, ' '), right_reg));
+              lines.push_back(std::format("{}idiv rbx", std::string(indent, ' ')));
+            } else {
+              lines.push_back(std::format("{}idiv {}", std::string(indent, ' '), right_reg));
+            }
+            break;
+        }
+        return_val = "rax";
+      } 
+      else {
         case_error("Invalid while converting expr to assembly.");
       }
   }, e);
@@ -112,9 +148,6 @@ void Builder::build_function(Func f) {
   } else {
     indent = 2;
     lines.push_back(std::format("{}:", f.name));
-    //lines.push_back(std::format("{}push rbp", std::string(indent, ' ')));
-    //lines.push_back(std::format("{}mov rbp, rsp", std::string(indent, ' ')));
-    //lines.push_back(std::format("{}sub rsp, 16", std::string(indent, ' ')));
     build_scope(std::move(f.body));
     lines.insert(lines.end()-1, std::format("{}leave", std::string(indent, ' ')));
   }
